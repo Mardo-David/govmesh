@@ -27,7 +27,7 @@ export default function Dashboard() {
           <p className="text-sm md:text-base text-muted-foreground mt-1">
             <span className="hidden sm:inline">Bem-vindo, </span>
             <span className="text-primary font-semibold">GovMesh Admin</span>
-            <span className="hidden md:inline">. Gestão Estratégica: José da Silva — Sergipe.</span>
+            <span className="hidden md:inline">. Gestão Estratégica: Campanha 2026</span>
           </p>
         </div>
         <div className="flex items-center gap-2 text-xs md:text-sm text-muted-foreground bg-secondary/50 px-3 py-1.5 rounded-full border border-border/50">
