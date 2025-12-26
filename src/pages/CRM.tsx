@@ -48,20 +48,19 @@ function MoveButton({
       variant={size === 'sm' ? 'ghost' : 'outline'}
       className={cn(
         size === 'default' && 'flex-1 bg-secondary/50 border-border/50',
-        'min-h-[44px] min-w-[44px]',
+        'min-h-[32px] min-w-[32px] h-8 w-8 p-0', // Botões menores para caber melhor
         isDisabled && 'opacity-50 cursor-not-allowed'
       )}
       disabled={isDisabled}
-      onClick={onClick}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
     >
       {isBlocked ? (
         <Lock className="w-3 h-3" />
       ) : (
-        <>
-          {direction === 'left' && <Icon className={cn(size === 'sm' ? 'w-4 h-4' : 'w-5 h-5', size === 'default' && 'mr-1')} />}
-          {size === 'default' && (direction === 'left' ? 'Mover Esquerda' : 'Mover Direita')}
-          {direction === 'right' && <Icon className={cn(size === 'sm' ? 'w-4 h-4' : 'w-5 h-5', size === 'default' && 'ml-1')} />}
-        </>
+        <Icon className={cn(size === 'sm' ? 'w-4 h-4' : 'w-5 h-5')} />
       )}
     </Button>
   );
@@ -100,31 +99,46 @@ function LeadCard({ lead, onMove, isBlocked }: { lead: Lead; onMove: (leadId: st
     <>
       <div 
         className={cn(
-          'glass-card rounded-lg p-3 md:p-4 border-border/50 hover:border-primary/30 transition-all duration-200 cursor-pointer animate-fade-in group',
+          'glass-card rounded-lg p-3 border-border/50 hover:border-primary/30 transition-all duration-200 cursor-pointer animate-fade-in group relative overflow-hidden',
           isBlocked && 'opacity-70'
         )}
         onClick={() => setShowDetails(true)}
       >
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center shrink-0">
-            <span className="text-sm font-semibold text-foreground">
-              {lead.nome.split(' ').map(n => n[0]).join('').slice(0, 2)}
-            </span>
+        <div className="flex items-start justify-between gap-3 mb-2">
+           {/* Nome e Avatar */}
+           <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 flex items-center justify-center shrink-0 text-xs font-bold text-foreground">
+                {lead.nome.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              </div>
+              <h4 className="font-semibold text-foreground text-sm truncate leading-tight">{lead.nome}</h4>
+           </div>
+        </div>
+
+        {/* Informações de Contato Visíveis no Card */}
+        <div className="space-y-1.5 mb-3">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/30 p-1 rounded-md">
+            <Phone className="w-3 h-3 text-primary shrink-0" />
+            <span className="truncate font-mono">{lead.telefone}</span>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-foreground text-sm truncate">{lead.nome}</p>
-            <p className="text-xs text-muted-foreground truncate hidden md:block">{lead.territorio}</p>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/30 p-1 rounded-md">
+            <MapPin className="w-3 h-3 text-accent shrink-0" />
+            <span className="truncate">{lead.territorio}</span>
           </div>
         </div>
 
-        {/* Quick Actions - Larger touch targets */}
-        <div className="flex gap-2 mt-3 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+        {/* Botões de Ação */}
+        <div className="flex justify-between items-center pt-2 border-t border-border/30">
           <MoveButton
             direction="left"
             disabled={!canMoveLeft}
             isBlocked={isBlocked}
             onClick={() => onMove(lead.id, 'left')}
           />
+          
+          <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+            {lead.status}
+          </span>
+
           <MoveButton
             direction="right"
             disabled={!canMoveRight}
@@ -174,37 +188,12 @@ function LeadCard({ lead, onMove, isBlocked }: { lead: Lead; onMove: (leadId: st
               Último contato: {lead.ultimoContato}
             </div>
 
-            {/* Blocked Warning */}
             {isBlocked && (
               <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
                 <Lock className="w-4 h-4 shrink-0" />
                 <span>Movimentação bloqueada pelo Protocolo de Emergência</span>
               </div>
             )}
-
-            {/* Move Actions */}
-            <div className="flex gap-2 pt-4 border-t border-border">
-              <MoveButton
-                direction="left"
-                disabled={!canMoveLeft}
-                isBlocked={isBlocked}
-                size="default"
-                onClick={() => {
-                  onMove(lead.id, 'left');
-                  setShowDetails(false);
-                }}
-              />
-              <MoveButton
-                direction="right"
-                disabled={!canMoveRight}
-                isBlocked={isBlocked}
-                size="default"
-                onClick={() => {
-                  onMove(lead.id, 'right');
-                  setShowDetails(false);
-                }}
-              />
-            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -214,26 +203,35 @@ function LeadCard({ lead, onMove, isBlocked }: { lead: Lead; onMove: (leadId: st
 
 function MultiplicadorCard({ lead }: { lead: Lead }) {
   return (
-    <div className="glass-card rounded-lg p-3 md:p-4 border-success/30 bg-success/5 animate-fade-in">
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-success/30 to-primary/30 flex items-center justify-center shrink-0 relative">
-          <span className="text-sm font-semibold text-foreground">
-            {lead.nome.split(' ').map(n => n[0]).join('').slice(0, 2)}
-          </span>
-          <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-success flex items-center justify-center">
-            <Star className="w-3 h-3 text-success-foreground" />
-          </div>
+    <div className="glass-card rounded-lg p-3 border-success/30 bg-success/5 animate-fade-in relative overflow-hidden group hover:border-success/50 transition-colors">
+      <div className="flex items-start justify-between gap-3 mb-2">
+         <div className="flex items-center gap-3 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-success/30 to-primary/30 flex items-center justify-center shrink-0 relative">
+              <span className="text-xs font-bold text-foreground">
+                {lead.nome.split(' ').map(n => n[0]).join('').slice(0, 2)}
+              </span>
+              <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-success flex items-center justify-center">
+                <Star className="w-2 h-2 text-success-foreground" />
+              </div>
+            </div>
+            <h4 className="font-semibold text-foreground text-sm truncate">{lead.nome}</h4>
+         </div>
+      </div>
+
+      <div className="space-y-1.5 mb-3">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-success/10 p-1 rounded-md">
+          <Phone className="w-3 h-3 text-success shrink-0" />
+          <span className="truncate font-mono">{lead.telefone}</span>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-foreground text-sm truncate">{lead.nome}</p>
-          <p className="text-xs text-muted-foreground truncate hidden md:block">{lead.territorio}</p>
+        <div className="flex items-center gap-2 text-xs text-muted-foreground bg-success/10 p-1 rounded-md">
+          <MapPin className="w-3 h-3 text-success shrink-0" />
+          <span className="truncate">{lead.territorio}</span>
         </div>
       </div>
 
-      {/* Portal Access Badge */}
-      <div className="mt-3 p-2 rounded-lg bg-success/20 border border-success/30 flex items-center gap-2">
-        <Check className="w-4 h-4 text-success shrink-0" />
-        <span className="text-xs text-success font-medium truncate">Acesso ao Portal Liberado</span>
+      <div className="mt-2 p-1.5 rounded bg-success/20 border border-success/30 flex items-center justify-center gap-2">
+        <Check className="w-3 h-3 text-success shrink-0" />
+        <span className="text-[10px] text-success font-bold uppercase tracking-wide">Acesso Liberado</span>
       </div>
     </div>
   );
@@ -297,8 +295,8 @@ export default function CRMPage() {
         </div>
 
         {/* Kanban Board - Horizontal scroll on mobile */}
-        <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0">
-          <div className="grid grid-cols-4 gap-3 md:gap-4 min-w-[800px] md:min-w-0">
+        <div className="overflow-x-auto -mx-3 px-3 md:mx-0 md:px-0 pb-4">
+          <div className="grid grid-cols-4 gap-3 md:gap-4 min-w-[1000px] md:min-w-0">
             {statusColumns.map((column, colIdx) => {
               const columnLeads = leads.filter(l => l.status === column.status);
 
@@ -306,21 +304,21 @@ export default function CRMPage() {
                 <div
                   key={column.status}
                   className={cn(
-                    'rounded-xl p-3 md:p-4 border min-h-[400px] md:min-h-[500px] animate-fade-in',
+                    'rounded-xl p-3 border min-h-[400px] md:min-h-[600px] animate-fade-in flex flex-col',
                     column.color
                   )}
                   style={{ animationDelay: `${colIdx * 100}ms` }}
                 >
                   {/* Column Header */}
-                  <div className="flex items-center justify-between mb-3 md:mb-4">
-                    <h3 className="font-semibold text-foreground text-sm md:text-base">{column.label}</h3>
-                    <Badge variant="secondary" className="text-xs">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-foreground text-sm uppercase tracking-wider">{column.label}</h3>
+                    <Badge variant="secondary" className="text-xs font-mono">
                       {columnLeads.length}
                     </Badge>
                   </div>
 
                   {/* Cards */}
-                  <div className="space-y-2 md:space-y-3">
+                  <div className="space-y-2 flex-1 overflow-y-auto pr-1 custom-scrollbar max-h-[calc(100vh-250px)]">
                     {columnLeads.map((lead, idx) => (
                       <div key={lead.id} style={{ animationDelay: `${(colIdx * 100) + (idx * 50)}ms` }}>
                         {column.status === 'multiplicador' ? (
@@ -332,8 +330,8 @@ export default function CRMPage() {
                     ))}
 
                     {columnLeads.length === 0 && (
-                      <div className="text-center py-6 md:py-8 text-muted-foreground text-xs md:text-sm">
-                        Nenhum lead
+                      <div className="h-32 flex items-center justify-center border-2 border-dashed border-muted-foreground/20 rounded-lg">
+                        <span className="text-muted-foreground text-xs font-medium">Vazio</span>
                       </div>
                     )}
                   </div>

@@ -116,20 +116,34 @@ const mockKits: Kit[] = [
 ];
 
 const mockLeads: Lead[] = [
-  { id: 'l1', nome: 'Carlos Menezes', status: 'multiplicador', territorio: 'Grande Aracaju', email: 'carlos@email.com', telefone: '79999999999', ultimoContato: '2024-01-15' },
-  { id: 'l2', nome: 'Ana Santos', status: 'engajado', territorio: 'Agreste Central', email: 'ana@email.com', telefone: '79888888888', ultimoContato: '2024-01-14' },
-  { id: 'l3', nome: 'Roberto Lima', status: 'novo', territorio: 'Centro Sul', email: 'roberto@email.com', telefone: '79777777777', ultimoContato: '2024-01-13' },
-  { id: 'l4', nome: 'Maria Oliveira', status: 'multiplicador', territorio: 'Sul Sergipano', email: 'maria@email.com', telefone: '79666666666', ultimoContato: '2024-01-12' },
-  { id: 'l5', nome: 'João Pereira', status: 'engajado', territorio: 'Baixo São Francisco', email: 'joao@email.com', telefone: '79555555555', ultimoContato: '2024-01-11' },
-  { id: 'l6', nome: 'Fernanda Costa', status: 'novo', territorio: 'Alto Sertão', email: 'fernanda@email.com', telefone: '79444444444', ultimoContato: '2024-01-10' },
-  { id: 'l7', nome: 'Pedro Alves', status: 'contatado', territorio: 'Médio Sertão', email: 'pedro@email.com', telefone: '79333333333', ultimoContato: '2024-01-09' },
-  { id: 'l8', nome: 'Juliana Souza', status: 'engajado', territorio: 'Leste Sergipano', email: 'juliana@email.com', telefone: '79222222222', ultimoContato: '2024-01-08' },
-  { id: 'l9', nome: 'Lucas Ferreira', status: 'novo', territorio: 'Grande Aracaju', email: 'lucas@email.com', telefone: '79111111111', ultimoContato: '2024-01-07' },
-  { id: 'l10', nome: 'Patricia Rocha', status: 'contatado', territorio: 'Agreste Central', email: 'patricia@email.com', telefone: '79000000000', ultimoContato: '2024-01-06' },
-  { id: 'l11', nome: 'Marcos Dias', status: 'multiplicador', territorio: 'Centro Sul', email: 'marcos@email.com', telefone: '79123456789', ultimoContato: '2024-01-05' },
-  { id: 'l12', nome: 'Camila Torres', status: 'contatado', territorio: 'Sul Sergipano', email: 'camila@email.com', telefone: '79987654321', ultimoContato: '2024-01-04' },
-];
+  // Novos
+  { id: 'l1', nome: 'Carlos Menezes', status: 'novo', territorio: 'Grande Aracaju', email: 'carlos@email.com', telefone: '(79) 99999-9999', ultimoContato: '2024-01-15' },
+  { id: 'l2', nome: 'Ana Santos', status: 'novo', territorio: 'Agreste Central', email: 'ana@email.com', telefone: '(79) 98888-8888', ultimoContato: '2024-01-14' },
+  { id: 'l3', nome: 'Roberto Lima', status: 'novo', territorio: 'Centro Sul', email: 'roberto@email.com', telefone: '(79) 97777-7777', ultimoContato: '2024-01-13' },
+  { id: 'l4', nome: 'Maria Oliveira', status: 'novo', territorio: 'Sul Sergipano', email: 'maria@email.com', telefone: '(79) 96666-6666', ultimoContato: '2024-01-12' },
+  { id: 'l5', nome: 'João Pereira', status: 'novo', territorio: 'Baixo São Francisco', email: 'joao@email.com', telefone: '(79) 95555-5555', ultimoContato: '2024-01-11' },
 
+  // Contatados
+  { id: 'l6', nome: 'Fernanda Costa', status: 'contatado', territorio: 'Alto Sertão', email: 'fernanda@email.com', telefone: '(79) 94444-4444', ultimoContato: '2024-01-10' },
+  { id: 'l7', nome: 'Pedro Alves', status: 'contatado', territorio: 'Médio Sertão', email: 'pedro@email.com', telefone: '(79) 93333-3333', ultimoContato: '2024-01-09' },
+  { id: 'l8', nome: 'Juliana Souza', status: 'contatado', territorio: 'Leste Sergipano', email: 'juliana@email.com', telefone: '(79) 92222-2222', ultimoContato: '2024-01-08' },
+  { id: 'l9', nome: 'Lucas Ferreira', status: 'contatado', territorio: 'Grande Aracaju', email: 'lucas@email.com', telefone: '(79) 91111-1111', ultimoContato: '2024-01-07' },
+  { id: 'l10', nome: 'Patricia Rocha', status: 'contatado', territorio: 'Agreste Central', email: 'patricia@email.com', telefone: '(79) 90000-0000', ultimoContato: '2024-01-06' },
+
+  // Engajados
+  { id: 'l11', nome: 'Marcos Dias', status: 'engajado', territorio: 'Centro Sul', email: 'marcos@email.com', telefone: '(79) 91234-5678', ultimoContato: '2024-01-05' },
+  { id: 'l12', nome: 'Camila Torres', status: 'engajado', territorio: 'Sul Sergipano', email: 'camila@email.com', telefone: '(79) 98765-4321', ultimoContato: '2024-01-04' },
+  { id: 'l13', nome: 'Ricardo Alves', status: 'engajado', territorio: 'Estância', email: 'ricardo@email.com', telefone: '(79) 99888-7777', ultimoContato: '2024-01-18' },
+  { id: 'l14', nome: 'Beatriz Silva', status: 'engajado', territorio: 'Nossa Senhora da Glória', email: 'bia@email.com', telefone: '(79) 98877-6655', ultimoContato: '2024-01-19' },
+  { id: 'l15', nome: 'Felipe Santos', status: 'engajado', territorio: 'Itabaiana', email: 'felipe@email.com', telefone: '(79) 97766-5544', ultimoContato: '2024-01-20' },
+
+  // Multiplicadores
+  { id: 'l16', nome: 'Mariana Costa', status: 'multiplicador', territorio: 'Lagarto', email: 'mariana@email.com', telefone: '(79) 96655-4433', ultimoContato: '2024-01-21' },
+  { id: 'l17', nome: 'José Wellington', status: 'multiplicador', territorio: 'Propriá', email: 'jose@email.com', telefone: '(79) 95544-3322', ultimoContato: '2024-01-22' },
+  { id: 'l18', nome: 'Cláudia Nunes', status: 'multiplicador', territorio: 'Tobias Barreto', email: 'claudia@email.com', telefone: '(79) 94433-2211', ultimoContato: '2024-01-23' },
+  { id: 'l19', nome: 'Sérgio Lima', status: 'multiplicador', territorio: 'São Cristóvão', email: 'sergio@email.com', telefone: '(79) 93322-1100', ultimoContato: '2024-01-24' },
+  { id: 'l20', nome: 'Valéria Rocha', status: 'multiplicador', territorio: 'Simão Dias', email: 'valeria@email.com', telefone: '(79) 92211-0099', ultimoContato: '2024-01-25' },
+];
 const mockBoatos: Boato[] = [
   { 
     id: 'b1', 
