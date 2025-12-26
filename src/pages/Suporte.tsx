@@ -26,7 +26,7 @@ export default function SuportePage() {
   const [activeInstallTab, setActiveInstallTab] = useState('iphone');
   const [showDemo, setShowDemo] = useState(false);
 
-  // Ações de Contato Reais
+  // Ações de Contato Fluid-TI
   const handleWhatsApp = () => {
     window.open('https://wa.me/5581999897501', '_blank');
   };
@@ -41,20 +41,21 @@ export default function SuportePage() {
 
   return (
     <AppLayout>
-      <div className="space-y-8 animate-fade-in max-w-5xl mx-auto pb-10">
+      <div className="space-y-6 animate-fade-in"> 
+        {/* Removido max-w-5xl para ocupar largura total como as outras páginas */}
         
         {/* Cabeçalho */}
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
             <LifeBuoy className="w-8 h-8 text-primary" />
             Central de Suporte
           </h1>
-          <p className="text-muted-foreground text-base md:text-lg">
-            Precisa de ajuda técnica ou manutenção? Entre em contato diretamente com nossa equipe.
+          <p className="text-muted-foreground text-base">
+            Documentação, orientações e atendimento direto com a equipe técnica.
           </p>
         </div>
 
-        {/* Seção 1: Como Instalar (Mantida Original) */}
+        {/* Seção: Como Instalar (Mantendo funcionalidade original) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -63,7 +64,7 @@ export default function SuportePage() {
           <div className="h-1 bg-gradient-to-r from-primary via-accent to-primary" />
           <div className="p-6">
             <div className="flex flex-col md:flex-row md:items-start gap-6">
-              {/* Left side - Info */}
+              {/* Lado Esquerdo - Info */}
               <div className="flex-1 space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
@@ -75,7 +76,7 @@ export default function SuportePage() {
                   </div>
                 </div>
 
-                {/* Benefits */}
+                {/* Benefícios */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {[
                     { icon: Download, text: 'Acesso Offline' },
@@ -92,7 +93,7 @@ export default function SuportePage() {
                   ))}
                 </div>
 
-                {/* Platform Tabs */}
+                {/* Abas de Plataforma */}
                 <Tabs value={activeInstallTab} onValueChange={setActiveInstallTab} className="w-full">
                   <TabsList className="w-full bg-secondary/50">
                     <TabsTrigger value="iphone" className="flex-1 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
@@ -174,7 +175,7 @@ export default function SuportePage() {
                 </Tabs>
               </div>
 
-              {/* Right side - Demo Video Placeholder */}
+              {/* Lado Direito - Demo Video Placeholder */}
               <div className="w-full md:w-64 shrink-0 hidden md:block">
                 <div 
                   onClick={() => setShowDemo(true)}
@@ -200,29 +201,31 @@ export default function SuportePage() {
           </div>
         </motion.div>
 
-        {/* Seção 2: Canais de Atendimento (Fluid-TI) */}
+        {/* Seção 2: Canais de Atendimento Fluid-TI (Largura Total) */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Card WhatsApp */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="glass-card p-6 rounded-xl border-l-4 border-l-green-500 hover:shadow-lg transition-all"
+            className="glass-card p-6 rounded-xl border-l-4 border-l-green-500 hover:shadow-lg transition-all flex flex-col justify-between"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className="p-3 bg-green-500/10 rounded-lg">
-                <MessageCircle className="w-8 h-8 text-green-600" />
+            <div>
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-green-500/10 rounded-lg">
+                  <MessageCircle className="w-8 h-8 text-green-600" />
+                </div>
+                <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded-full uppercase">
+                  Recomendado
+                </span>
               </div>
-              <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded-full uppercase">
-                Prioridade
-              </span>
+              <h3 className="text-xl font-bold text-foreground mb-2">Suporte via WhatsApp</h3>
+              <p className="text-muted-foreground mb-6">
+                Fale diretamente com <strong>Mardo Carneiro</strong> para resoluções rápidas, dúvidas urgentes ou suporte em tempo real.
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">Suporte via WhatsApp</h3>
-            <p className="text-muted-foreground mb-6">
-              Fale diretamente com Mardo Carneiro para resoluções rápidas e dúvidas urgentes.
-            </p>
             <Button 
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold h-12 gap-2"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold h-12 gap-2 mt-auto"
               onClick={handleWhatsApp}
             >
               <Phone className="w-4 h-4" />
@@ -235,20 +238,22 @@ export default function SuportePage() {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            className="glass-card p-6 rounded-xl border-l-4 border-l-blue-500 hover:shadow-lg transition-all"
+            className="glass-card p-6 rounded-xl border-l-4 border-l-blue-500 hover:shadow-lg transition-all flex flex-col justify-between"
           >
-            <div className="flex items-start justify-between mb-4">
-              <div className="p-3 bg-blue-500/10 rounded-lg">
-                <Mail className="w-8 h-8 text-blue-600" />
+            <div>
+              <div className="flex items-start justify-between mb-4">
+                <div className="p-3 bg-blue-500/10 rounded-lg">
+                  <Mail className="w-8 h-8 text-blue-600" />
+                </div>
               </div>
+              <h3 className="text-xl font-bold text-foreground mb-2">Suporte via Email</h3>
+              <p className="text-muted-foreground mb-6">
+                Para solicitações formais, envio de relatórios de erros detalhados ou agendamento de manutenção.
+              </p>
             </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">Suporte via Email</h3>
-            <p className="text-muted-foreground mb-6">
-              Para solicitações formais, relatórios de erros ou agendamento de manutenção.
-            </p>
             <Button 
               variant="outline" 
-              className="w-full h-12 gap-2 border-blue-200 hover:bg-blue-50 text-blue-700"
+              className="w-full h-12 gap-2 border-blue-200 hover:bg-blue-50 text-blue-700 mt-auto"
               onClick={handleEmail}
             >
               <Mail className="w-4 h-4" />
@@ -257,64 +262,65 @@ export default function SuportePage() {
           </motion.div>
         </div>
 
-        {/* Seção 3: Informações da Desenvolvedora (Fluid-TI) */}
+        {/* Seção 3: Informações da Empresa (Rodapé Técnico) */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="mt-10"
+          className="mt-6"
         >
-          <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-primary" />
-            Desenvolvimento & Tecnologia
-          </h2>
-          
           <div className="glass-card rounded-xl overflow-hidden border-border/50">
             <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-border/50">
               
               {/* Info Empresa */}
-              <div className="p-6 flex flex-col items-center text-center md:items-start md:text-left hover:bg-secondary/30 transition-colors">
-                <span className="text-sm text-muted-foreground font-medium uppercase tracking-wider mb-2">Empresa</span>
-                <h4 className="text-2xl font-black text-primary mb-1">Fluid-TI</h4>
-                <p className="text-sm text-muted-foreground">Inteligência em Tecnologia</p>
-                <Button variant="link" className="p-0 h-auto mt-3 text-primary gap-1" onClick={handleSite}>
-                  Visitar site <ArrowRight className="w-3 h-3" />
+              <div className="p-6 flex flex-col items-center md:items-start text-center md:text-left hover:bg-secondary/30 transition-colors">
+                <div className="flex items-center gap-2 mb-2 text-primary">
+                  <Building2 className="w-5 h-5" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Empresa</span>
+                </div>
+                <h4 className="text-2xl font-black text-foreground mb-1">Fluid-TI</h4>
+                <p className="text-sm text-muted-foreground mb-3">Inteligência e Tecnologia</p>
+                <Button variant="link" className="p-0 h-auto text-primary gap-1" onClick={handleSite}>
+                  www.fluid-ti.com <ArrowRight className="w-3 h-3" />
                 </Button>
               </div>
 
               {/* Info Responsável */}
-              <div className="p-6 flex flex-col items-center text-center md:items-start md:text-left hover:bg-secondary/30 transition-colors">
-                <span className="text-sm text-muted-foreground font-medium uppercase tracking-wider mb-2">Responsável Técnico</span>
-                <div className="flex items-center gap-3 mb-1 justify-center md:justify-start">
-                  <div className="p-1.5 bg-primary/10 rounded-full">
-                    <User className="w-4 h-4 text-primary" />
-                  </div>
-                  <h4 className="text-lg font-bold text-foreground">Mardo Carneiro</h4>
+              <div className="p-6 flex flex-col items-center md:items-start text-center md:text-left hover:bg-secondary/30 transition-colors">
+                <div className="flex items-center gap-2 mb-2 text-primary">
+                  <User className="w-5 h-5" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Responsável Técnico</span>
                 </div>
-                <p className="text-sm text-muted-foreground">Full Stack Developer & Architect</p>
+                <h4 className="text-lg font-bold text-foreground">Mardo Carneiro</h4>
+                <p className="text-sm text-muted-foreground">Diretor Comercial</p>
+                <div className="flex items-center gap-1 mt-3 text-xs text-muted-foreground bg-secondary px-2 py-1 rounded">
+                  <Phone className="w-3 h-3" /> 81 99989-7501
+                </div>
               </div>
 
-              {/* Info Web */}
-              <div className="p-6 flex flex-col items-center text-center md:items-start md:text-left hover:bg-secondary/30 transition-colors">
-                <span className="text-sm text-muted-foreground font-medium uppercase tracking-wider mb-2">Portal Oficial</span>
-                <div className="flex items-center gap-2 mb-2 justify-center md:justify-start">
-                  <Globe className="w-5 h-5 text-muted-foreground" />
-                  <span className="font-mono text-sm">www.fluid-ti.com</span>
+              {/* Info Portal */}
+              <div className="p-6 flex flex-col items-center md:items-start text-center md:text-left hover:bg-secondary/30 transition-colors">
+                <div className="flex items-center gap-2 mb-2 text-primary">
+                  <Globe className="w-5 h-5" />
+                  <span className="text-xs font-bold uppercase tracking-wider">Portal Oficial</span>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  Acesse para conhecer nosso portfólio completo.
+                <p className="text-sm text-muted-foreground mb-4">
+                  Acesse nosso site para conhecer o portfólio completo e outras soluções.
                 </p>
+                <Button variant="outline" size="sm" onClick={handleSite} className="w-full md:w-auto">
+                  Acessar Portal
+                </Button>
               </div>
 
             </div>
           </div>
         </motion.div>
 
-        {/* Rodapé da Página */}
+        {/* Copyright */}
         <div className="text-center pt-8 pb-4">
           <p className="text-xs text-muted-foreground">
             &copy; {new Date().getFullYear()} GovMesh. Todos os direitos reservados. 
-            Desenvolvido com tecnologia <span className="font-bold text-primary">Fluid-TI</span>.
+            Desenvolvido por <span className="font-bold text-foreground">Fluid-TI</span>.
           </p>
         </div>
 
