@@ -57,7 +57,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         </div>
         <div>
           <h1 className="font-bold text-lg text-foreground tracking-tight">GovMesh</h1>
-          <p className="text-xs text-muted-foreground">Governança Territorial</p>
+          <p className="text-xs text-muted-foreground">Governança Política</p>
         </div>
       </div>
 

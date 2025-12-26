@@ -86,7 +86,7 @@ export default function LoginPage() {
             <div className="absolute -inset-2 bg-gradient-to-br from-primary/20 to-accent/20 rounded-3xl blur-xl -z-10" />
           </div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">GovMesh</h1>
-          <p className="text-muted-foreground text-xs md:text-sm mt-1">Portal de Governança Territorial</p>
+          <p className="text-muted-foreground text-xs md:text-sm mt-1">Portal de Governança Política</p>
         </motion.div>
 
         {/* Login Card */}

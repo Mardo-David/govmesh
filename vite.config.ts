@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
@@ -17,9 +16,9 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'robots.txt'],
       manifest: {
-        name: 'GovMesh - Governança Territorial',
+        name: 'GovMesh - Governança Política',
         short_name: 'GovMesh',
-        description: 'Sistema de Governança Territorial - Campanha José da Silva - Governo de Sergipe',
+        description: 'Sistema de Governança Política - Campanha José da Silva - Governo de Sergipe',
         theme_color: '#0a0f1c',
         background_color: '#0a0f1c',
         display: 'standalone',
