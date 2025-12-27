@@ -16,6 +16,7 @@ import Auditoria from "./pages/Auditoria";
 import Configuracoes from "./pages/Configuracoes";
 import Suporte from "./pages/Suporte";
 import NotFound from "./pages/NotFound";
+import Gamificacao from "./pages/Gamificacao";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
             <Route path="/configuracoes" element={<Configuracoes />} />
             <Route path="/suporte" element={<Suporte />} />
             <Route path="*" element={<NotFound />} />
+            <Route path="/gamificacao" element={<Gamificacao />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

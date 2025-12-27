@@ -10,6 +10,7 @@ import {
   Hexagon,
   Sparkles,
   Scale,
+  Trophy, // Novo ícone importado
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGovMesh } from '@/contexts/GovMeshContext';
@@ -19,6 +20,10 @@ const allNavItems = [
   { icon: FolderKanban, label: 'Kits', path: '/kits', profiles: ['Admin', 'Jurídico', 'Liderança', 'Apoiador'] },
   { icon: Sparkles, label: 'GovMesh Assist', path: '/assist', profiles: ['Admin', 'Jurídico', 'Liderança', 'Apoiador'] },
   { icon: Users, label: 'CRM Mobilização', path: '/crm', profiles: ['Admin', 'Liderança'] },
+  
+  // Novo Item de Gamificação
+  { icon: Trophy, label: 'Gamificação', path: '/gamificacao', profiles: ['Admin', 'Liderança', 'Apoiador'] },
+  
   { icon: Scale, label: 'Aprovação Jurídica', path: '/juridico', profiles: ['Admin', 'Jurídico'] },
   { icon: AlertTriangle, label: 'Boatos', path: '/boatos', profiles: ['Admin', 'Jurídico', 'Liderança'] },
   { icon: FileText, label: 'Auditoria', path: '/auditoria', profiles: ['Admin', 'Jurídico'] },
@@ -39,6 +44,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const location = useLocation();
   const { userProfile } = useGovMesh();
 
+  // Filtra os itens com base no perfil do usuário
   const navItems = allNavItems.filter(item => item.profiles.includes(userProfile));
   const filteredBottomItems = bottomItems.filter(item => item.profiles.includes(userProfile));
 
@@ -62,7 +68,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto">
+      <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto custom-scrollbar">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
