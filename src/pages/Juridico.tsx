@@ -136,18 +136,18 @@ export default function JuridicoPage() {
 
   if (userProfile === 'Apoiador') {
     return (
-      <AppLayout>
+      <div>
         <div className="flex flex-col items-center justify-center h-[60vh] text-center">
           <Scale className="w-16 h-16 text-muted-foreground/30 mb-4" />
           <h2 className="text-xl font-semibold text-foreground mb-2">Acesso Restrito</h2>
           <p className="text-muted-foreground">Esta área é exclusiva para perfis Jurídico e Admin.</p>
         </div>
-      </AppLayout>
+      </div>
     );
   }
 
   return (
-    <AppLayout>
+    <div>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -374,6 +374,6 @@ export default function JuridicoPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AppLayout>
+    </div>
   );
 }

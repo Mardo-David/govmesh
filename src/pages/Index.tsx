@@ -3,9 +3,9 @@ import Dashboard from './Dashboard';
 
 const Index = () => {
   return (
-    <AppLayout>
+    <div>
       <Dashboard />
-    </AppLayout>
+    </div>
   );
 };
 

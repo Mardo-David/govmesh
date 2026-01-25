@@ -5,10 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GovMeshProvider } from "./contexts/GovMeshContext";
 import { InstallPrompt } from "./components/pwa/InstallPrompt";
-import { AppLayout } from "./components/layout/AppLayout"; // [Importante] Importa o layout da pasta certa
+import { AppLayout } from "./components/layout/AppLayout";
 
 // Importação das Páginas
-import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard"; // <--- ADICIONAMOS ESTE IMPORT
 import Login from "./pages/Login";
 import Kits from "./pages/Kits";
 import Assist from "./pages/Assist";
@@ -21,6 +21,9 @@ import Suporte from "./pages/Suporte";
 import NotFound from "./pages/NotFound";
 import Gamificacao from "./pages/Gamificacao";
 import RadarPage from "./pages/RadarPage";
+
+// O Index não é mais necessário aqui, pois usaremos o Dashboard direto
+// import Index from "./pages/Index"; 
 
 const queryClient = new QueryClient();
 
@@ -35,9 +38,10 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             
-            {/* O AppLayout envolve as rotas internas */}
             <Route element={<AppLayout />}>
-              <Route path="/" element={<Index />} />
+              {/* MUDANÇA AQUI: Trocamos <Index /> por <Dashboard /> */}
+              <Route path="/" element={<Dashboard />} />
+              
               <Route path="/radar" element={<RadarPage />} />
               <Route path="/kits" element={<Kits />} />
               <Route path="/assist" element={<Assist />} />

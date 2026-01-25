@@ -40,7 +40,7 @@ export default function SuportePage() {
   };
 
   return (
-    <AppLayout>
+    <div>
       <div className="space-y-6 animate-fade-in"> 
         {/* Removido max-w-5xl para ocupar largura total como as outras páginas */}
         
@@ -358,6 +358,6 @@ export default function SuportePage() {
           )}
         </AnimatePresence>
       </div>
-    </AppLayout>
+    </div>
   );
 }

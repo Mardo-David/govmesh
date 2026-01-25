@@ -85,7 +85,7 @@ export default function ConfiguracoesPage() {
   };
 
   return (
-    <AppLayout>
+    <div>
       <div className="space-y-6 max-w-4xl">
         {/* Header */}
         <div>
@@ -554,6 +554,6 @@ export default function ConfiguracoesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AppLayout>
+    </div>
   );
 }

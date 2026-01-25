@@ -268,7 +268,7 @@ export default function CRMPage() {
   };
 
   return (
-    <AppLayout>
+    <div>
       <div className="space-y-4 md:space-y-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -341,6 +341,6 @@ export default function CRMPage() {
           </div>
         </div>
       </div>
-    </AppLayout>
+    </div>
   );
 }

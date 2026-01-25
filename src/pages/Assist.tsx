@@ -157,7 +157,7 @@ export default function AssistPage() {
   );
 
   return (
-    <AppLayout>
+    <div>
       <div className="h-[calc(100vh-7rem)] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -373,6 +373,6 @@ export default function AssistPage() {
           </p>
         </div>
       </div>
-    </AppLayout>
+    </div>
   );
 }

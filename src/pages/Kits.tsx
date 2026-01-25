@@ -241,7 +241,7 @@ export default function KitsPage() {
   const statusOptions: (KitStatus | 'todos')[] = ['todos', 'aprovado', 'pendente', 'bloqueado'];
 
   return (
-    <AppLayout>
+    <div>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -319,6 +319,6 @@ export default function KitsPage() {
           </div>
         )}
       </div>
-    </AppLayout>
+    </div>
   );
 }

@@ -52,7 +52,7 @@ export default function GamificacaoPage() {
   ];
 
   return (
-    <AppLayout>
+    <div>
       <div className="space-y-8 animate-fade-in pb-10">
         
         {/* Cabeçalho */}
@@ -264,6 +264,6 @@ export default function GamificacaoPage() {
 
         </div>
       </div>
-    </AppLayout>
+    </div>
   );
 }
