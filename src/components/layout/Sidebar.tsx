@@ -11,16 +11,18 @@ import {
   Sparkles,
   Scale,
   Trophy,
-  Activity // Ícone novo
+  Activity,
+  Ear // Ícone novo para Escuta Ativa
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGovMesh } from '@/contexts/GovMeshContext';
 
 const allNavItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/', profiles: ['Admin', 'Jurídico', 'Liderança', 'Apoiador'] },
-  
-  // Novo item adicionado aqui
   { icon: Activity, label: 'Radar das Redes', path: '/radar', profiles: ['Admin', 'Jurídico', 'Liderança'] },
+  
+  // NOVO ITEM
+  { icon: Ear, label: 'Escuta Ativa', path: '/escuta', profiles: ['Admin', 'Liderança', 'Apoiador'] },
 
   { icon: FolderKanban, label: 'Kits', path: '/kits', profiles: ['Admin', 'Jurídico', 'Liderança', 'Apoiador'] },
   { icon: Sparkles, label: 'GovMesh Assist', path: '/assist', profiles: ['Admin', 'Jurídico', 'Liderança', 'Apoiador'] },

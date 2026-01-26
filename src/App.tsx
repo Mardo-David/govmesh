@@ -8,7 +8,7 @@ import { InstallPrompt } from "./components/pwa/InstallPrompt";
 import { AppLayout } from "./components/layout/AppLayout";
 
 // Importação das Páginas
-import Dashboard from "./pages/Dashboard"; // <--- ADICIONAMOS ESTE IMPORT
+import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import Kits from "./pages/Kits";
 import Assist from "./pages/Assist";
@@ -21,9 +21,7 @@ import Suporte from "./pages/Suporte";
 import NotFound from "./pages/NotFound";
 import Gamificacao from "./pages/Gamificacao";
 import RadarPage from "./pages/RadarPage";
-
-// O Index não é mais necessário aqui, pois usaremos o Dashboard direto
-// import Index from "./pages/Index"; 
+import EscutaAtiva from "./pages/EscutaAtiva"; // <--- Import Novo
 
 const queryClient = new QueryClient();
 
@@ -39,10 +37,12 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             
             <Route element={<AppLayout />}>
-              {/* MUDANÇA AQUI: Trocamos <Index /> por <Dashboard /> */}
               <Route path="/" element={<Dashboard />} />
-              
               <Route path="/radar" element={<RadarPage />} />
+              
+              {/* NOVA ROTA */}
+              <Route path="/escuta" element={<EscutaAtiva />} />
+              
               <Route path="/kits" element={<Kits />} />
               <Route path="/assist" element={<Assist />} />
               <Route path="/crm" element={<CRM />} />
