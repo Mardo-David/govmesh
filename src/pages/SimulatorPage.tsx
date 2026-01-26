@@ -1,517 +1,961 @@
-import { useState, useEffect, useRef } from 'react';
-import { 
-  MessageSquare, Video, ShieldAlert, Camera, 
-  Truck, Target, Play, Pause, RotateCcw, Mic, 
-  Check, CheckCheck, Phone, ChevronLeft, Bot, 
-  Image as ImageIcon, Zap, FastForward, FileText
-} from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
-import { Slider } from '@/components/ui/slider';
+// src/pages/SimulatorPage.tsx
+import React, { useEffect, useMemo, useRef } from "react";
+import { create } from "zustand";
+import { AnimatePresence, motion } from "framer-motion";
+import { Play, Pause, RotateCcw, ChevronRight, Zap } from "lucide-react";
 
-// --- ARQUITETURA DE DADOS (TIPOS) ---
+// If your shadcn/ui paths differ, adjust these imports.
+// Common Vite setups use: "@/components/ui/..."
+import { Button } from "../components/ui/button";
+import { Card } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Separator } from "../components/ui/separator";
 
-type StepType = 'typing' | 'text' | 'audio' | 'forwarded' | 'image' | 'video' | 'button' | 'system';
+// -----------------------------
+// 1) Types
+// -----------------------------
+type ScenarioId = "onboarding" | "kits" | "fake-news" | "ocr" | "fleet" | "goals";
+type Actor = "user" | "agent";
+type StepType = "typing" | "text" | "audio" | "forwarded" | "image" | "file" | "button";
 
-interface Step {
+type BackstageKey =
+  | "crm-lookup"
+  | "role-detection"
+  | "lgpd-consent"
+  | "audit-log"
+  | "audio-transcription"
+  | "intent-detection"
+  | "approved-kits"
+  | "native-send"
+  | "viral-match"
+  | "war-room-db"
+  | "official-response"
+  | "instant-reply"
+  | "vision-ocr"
+  | "field-extraction"
+  | "crm-format"
+  | "human-error-reduction"
+  | "entity-categorization"
+  | "resource-logistics"
+  | "event-scheduling"
+  | "gamification-progress"
+  | "inactivity-trigger"
+  | "crm-update";
+
+type StepBase = {
   id: string;
   type: StepType;
-  sender: 'user' | 'agent' | 'system';
-  content?: string;
-  mediaMeta?: string; // Duração, nome do arquivo, legenda
-  delayMs: number; // Tempo de espera ANTES de executar este passo
-  backstageKeys?: string[]; // Quais chips técnicos acender
-}
-
-interface Scenario {
-  id: string;
-  title: string;
-  description: string;
-  icon: any;
-  techSummary: string;
-  techChips: string[];
-  steps: Step[];
-}
-
-// --- DADOS DOS CENÁRIOS (ROTEIROS) ---
-
-const SCENARIOS: Scenario[] = [
-  {
-    id: 'onboarding',
-    title: 'Onboarding & Segurança',
-    description: 'Entrada segura e validação.',
-    icon: ShieldAlert,
-    techSummary: 'Validação de identidade em tempo real e registro legal.',
-    techChips: ['CRM Lookup', 'Role Detection', 'LGPD Consent', 'Audit Log'],
-    steps: [
-      { id: '1', type: 'text', sender: 'user', content: 'Oi, quero ajudar na campanha.', delayMs: 500 },
-      { id: '2', type: 'typing', sender: 'agent', delayMs: 800 },
-      { id: '3', type: 'text', sender: 'agent', content: 'Olá! Sou a IA do Candidato Zé. Para liberar seu acesso, digite apenas o seu CPF.', delayMs: 1500, backstageKeys: ['CRM Lookup'] },
-      { id: '4', type: 'text', sender: 'user', content: '000.111.222-33', delayMs: 2500 },
-      { id: '5', type: 'typing', sender: 'agent', delayMs: 600 },
-      { id: '6', type: 'text', sender: 'agent', content: '✅ Identifiquei você, Carlos (Capitão Regional).', delayMs: 1200, backstageKeys: ['Role Detection'] },
-      { id: '7', type: 'text', sender: 'agent', content: 'Para continuar, você concorda com nossos termos de uso e LGPD?', delayMs: 1000 },
-      { id: '8', type: 'button', sender: 'agent', content: '👍 LI E CONCORDO', delayMs: 500, backstageKeys: ['LGPD Consent'] },
-      { id: '9', type: 'typing', sender: 'agent', delayMs: 600 },
-      { id: '10', type: 'text', sender: 'agent', content: 'Acesso liberado! 🔓 O que vamos fazer hoje?', delayMs: 1000, backstageKeys: ['Audit Log'] },
-    ]
-  },
-  {
-    id: 'kits',
-    title: 'Entrega de Munição',
-    description: 'Distribuição de materiais nativos.',
-    icon: Video,
-    techSummary: 'Entendimento semântico e envio de mídia sem links externos.',
-    techChips: ['Audio Transcription', 'Intent Detection', 'Approved Kits DB', 'Native Send'],
-    steps: [
-      { id: '1', type: 'audio', sender: 'user', mediaMeta: '0:08', content: 'audio_request.mp3', delayMs: 500, backstageKeys: ['Audio Transcription'] },
-      { id: '2', type: 'typing', sender: 'agent', delayMs: 1000 },
-      { id: '3', type: 'text', sender: 'agent', content: 'Entendido, Carlos! 🏥', delayMs: 1200, backstageKeys: ['Intent Detection'] },
-      { id: '4', type: 'text', sender: 'agent', content: 'Aqui está o vídeo oficial aprovado pelo jurídico. Pode encaminhar!', delayMs: 1000, backstageKeys: ['Approved Kits DB'] },
-      { id: '5', type: 'video', sender: 'agent', content: 'Hospital_Novo.mp4', mediaMeta: 'Saúde levada a sério! Compartilhe a verdade.', delayMs: 1500, backstageKeys: ['Native Send'] },
-    ]
-  },
-  {
-    id: 'fakenews',
-    title: 'Caça-Fantasmas',
-    description: 'Combate a Fake News.',
-    icon: ShieldAlert,
-    techSummary: 'Detecção de viralidade e resposta oficial instantânea.',
-    techChips: ['Viral Match', 'War Room DB', 'Official Response', 'Instant Reply'],
-    steps: [
-      { id: '1', type: 'forwarded', sender: 'user', content: 'Dizem que o Zé vai fechar a escola do bairro...', delayMs: 800, backstageKeys: ['Viral Match'] },
-      { id: '2', type: 'typing', sender: 'agent', delayMs: 600 },
-      { id: '3', type: 'text', sender: 'agent', content: '🚨 Atenção! Isso é FAKE NEWS.', delayMs: 800, backstageKeys: ['War Room DB'] },
-      { id: '4', type: 'text', sender: 'agent', content: 'Já analisamos esse boato. A verdade é que a escola será reformada.', delayMs: 1200 },
-      { id: '5', type: 'image', sender: 'agent', content: 'card_desmentido.jpg', mediaMeta: 'FATO ou FAKE?', delayMs: 1000, backstageKeys: ['Official Response'] },
-      { id: '6', type: 'text', sender: 'agent', content: 'Mande esse card agora no grupo onde você viu a mentira!', delayMs: 1000, backstageKeys: ['Instant Reply'] },
-    ]
-  },
-  {
-    id: 'ocr',
-    title: 'Cadastro via Foto',
-    description: 'OCR e Visão Computacional.',
-    icon: Camera,
-    techSummary: 'Extração de dados de imagem para cadastro automático.',
-    techChips: ['Vision OCR', 'Field Extraction', 'CRM Format', 'Error Check'],
-    steps: [
-      { id: '1', type: 'text', sender: 'user', content: 'Consegui mais um apoio aqui!', delayMs: 500 },
-      { id: '2', type: 'image', sender: 'user', content: 'titulo_eleitor.jpg', mediaMeta: 'Foto enviada', delayMs: 1000, backstageKeys: ['Vision OCR'] },
-      { id: '3', type: 'typing', sender: 'agent', delayMs: 1500 },
-      { id: '4', type: 'text', sender: 'agent', content: 'Boa! Li os dados aqui:\nNome: Maria da Silva\nZona: 123 / Seção: 045', delayMs: 1000, backstageKeys: ['Field Extraction'] },
-      { id: '5', type: 'text', sender: 'agent', content: 'Posso confirmar o cadastro dela na sua base de Lagarto?', delayMs: 1000, backstageKeys: ['CRM Format'] },
-      { id: '6', type: 'text', sender: 'user', content: 'Pode sim.', delayMs: 1500, backstageKeys: ['Error Check'] },
-    ]
-  },
-  {
-    id: 'logistica',
-    title: 'Logística (Frota)',
-    description: 'Gestão de recursos.',
-    icon: Truck,
-    techSummary: 'Categorização de ativos e agendamento logístico.',
-    techChips: ['Entity Categorization', 'Resource Logistics', 'Event Scheduling'],
-    steps: [
-      { id: '1', type: 'text', sender: 'user', content: 'Tenho um carro pra adesivar.', delayMs: 500 },
-      { id: '2', type: 'typing', sender: 'agent', delayMs: 800 },
-      { id: '3', type: 'text', sender: 'agent', content: 'Show! Qual o modelo e cor? 🚗', delayMs: 1000, backstageKeys: ['Entity Categorization'] },
-      { id: '4', type: 'text', sender: 'user', content: 'É um Gol Prata.', delayMs: 2000 },
-      { id: '5', type: 'typing', sender: 'agent', delayMs: 800 },
-      { id: '6', type: 'text', sender: 'agent', content: 'Anotado. Você prefere o adesivo do vidro traseiro todo (perfurado) ou só o lateral?', delayMs: 1500, backstageKeys: ['Resource Logistics'] },
-      { id: '7', type: 'text', sender: 'user', content: 'O vidro todo.', delayMs: 2000 },
-      { id: '8', type: 'text', sender: 'agent', content: 'Perfeito. Sábado teremos um Pit Stop na Praça da Matriz. Te aviso o horário!', delayMs: 1500, backstageKeys: ['Event Scheduling'] },
-    ]
-  },
-  {
-    id: 'metas',
-    title: 'Gerente de Metas',
-    description: 'Follow-up ativo.',
-    icon: Target,
-    techSummary: 'Monitoramento de performance e gatilhos de inatividade.',
-    techChips: ['Gamification Progress', 'Inactivity Trigger', 'CRM Update'],
-    steps: [
-      { id: '1', type: 'typing', sender: 'agent', delayMs: 500 },
-      { id: '2', type: 'text', sender: 'agent', content: 'E aí, Carlos! 👋', delayMs: 1000 },
-      { id: '3', type: 'text', sender: 'agent', content: 'Vi que faltam só 2 cadastros para você bater a meta da semana e ganhar +500 XP.', delayMs: 1500, backstageKeys: ['Gamification Progress'] },
-      { id: '4', type: 'text', sender: 'agent', content: 'Conseguiu falar com aquele seu vizinho que estava indeciso?', delayMs: 1000, backstageKeys: ['Inactivity Trigger'] },
-      { id: '5', type: 'text', sender: 'user', content: 'Falei sim, ele garantiu o voto!', delayMs: 2500 },
-      { id: '6', type: 'typing', sender: 'agent', delayMs: 800 },
-      { id: '7', type: 'text', sender: 'agent', content: 'Excelente! Já atualizei aqui. 🚀 Falta só 1 agora!', delayMs: 1200, backstageKeys: ['CRM Update'] },
-    ]
-  }
-];
-
-// --- COMPONENTES AUXILIARES ---
-
-const MessageBubble = ({ step, onButtonClick }: { step: Step, onButtonClick: () => void }) => {
-  const isUser = step.sender === 'user';
-  
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      className={cn("flex w-full mb-2", isUser ? "justify-end" : "justify-start")}
-    >
-      <div className={cn(
-        "max-w-[85%] rounded-lg p-2 text-sm relative shadow-sm",
-        isUser ? "bg-[#005c4b] text-white rounded-tr-none" : "bg-[#202c33] text-gray-100 rounded-tl-none"
-      )}>
-        {/* Encaminhada */}
-        {step.type === 'forwarded' && (
-          <div className="flex items-center gap-1 text-[10px] italic text-gray-400 mb-1">
-            <FastForward className="w-3 h-3" /> Encaminhada
-          </div>
-        )}
-
-        {/* Conteúdo Texto */}
-        {(step.type === 'text' || step.type === 'forwarded') && (
-          <p className="leading-relaxed whitespace-pre-wrap">{step.content}</p>
-        )}
-
-        {/* Audio Player Fake */}
-        {step.type === 'audio' && (
-          <div className="flex items-center gap-3 pr-2 min-w-[140px]">
-            <div className="relative">
-              <div className="w-8 h-8 rounded-full bg-slate-700/50 flex items-center justify-center">
-                 <Mic className={cn("w-4 h-4", isUser ? "text-green-300" : "text-blue-400")} />
-              </div>
-            </div>
-            <div className="flex-1">
-               <div className="h-1 bg-white/30 rounded-full w-full mb-1 overflow-hidden">
-                  <motion.div 
-                    initial={{ width: 0 }} 
-                    animate={{ width: '100%' }} 
-                    transition={{ duration: 2 }}
-                    className="h-full bg-blue-400"
-                  />
-               </div>
-               <span className="text-[10px] opacity-80">{step.mediaMeta} • Reproduzido</span>
-            </div>
-          </div>
-        )}
-
-        {/* Imagem / Video */}
-        {(step.type === 'image' || step.type === 'video') && (
-          <div className="space-y-1">
-             <div className="bg-slate-800 h-32 w-48 rounded flex items-center justify-center text-slate-500 bg-cover bg-center relative overflow-hidden" 
-                  style={{ backgroundImage: step.type === 'image' ? 'linear-gradient(45deg, #1f2937 25%, #374151 25%)' : undefined }}>
-                {step.type === 'video' && <div className="absolute inset-0 flex items-center justify-center bg-black/40"><Play className="w-8 h-8 text-white fill-white" /></div>}
-                {step.type === 'image' && <ImageIcon className="w-8 h-8 opacity-50" />}
-             </div>
-             {step.mediaMeta && <p className="text-xs pt-1">{step.mediaMeta}</p>}
-          </div>
-        )}
-
-        {/* Botão Interativo */}
-        {step.type === 'button' && (
-          <div className="space-y-2">
-             <p className="opacity-80 pb-2 border-b border-white/10 text-xs text-center">Ação necessária</p>
-             <button 
-                onClick={onButtonClick}
-                className="w-full py-1.5 text-blue-400 font-bold hover:bg-white/5 rounded text-center transition-colors animate-pulse"
-             >
-               {step.content}
-             </button>
-          </div>
-        )}
-
-        {/* Metadata */}
-        <div className="flex justify-end items-center gap-1 mt-1 opacity-60">
-           <span className="text-[9px]">10:42</span>
-           {isUser && <CheckCheck className="w-3 h-3 text-blue-400" />}
-        </div>
-      </div>
-    </motion.div>
-  );
+  delayMs: number;
+  backstageKeys?: BackstageKey[];
+  blockUntilAction?: boolean;
 };
 
-// --- PÁGINA PRINCIPAL ---
+type Step =
+  | (StepBase & { type: "typing"; from: Actor })
+  | (StepBase & { type: "text"; from: Actor; content: string })
+  | (StepBase & { type: "audio"; from: Actor; meta: { seconds: number; label?: string } })
+  | (StepBase & { type: "forwarded"; from: Actor; content: string })
+  | (StepBase & { type: "image"; from: Actor; meta: { title: string; src: string } })
+  | (StepBase & { type: "file"; from: Actor; meta: { filename: string; caption?: string; thumbSrc?: string } })
+  | (StepBase & { type: "button"; from: Actor; meta: { label: string } });
 
-export default function SimulatorPage() {
-  const [activeScenarioId, setActiveScenarioId] = useState(SCENARIOS[0].id);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [cursor, setCursor] = useState(0); // Qual passo estamos
-  const [speed, setSpeed] = useState(1);
-  const [activeBackstageKeys, setActiveBackstageKeys] = useState<Set<string>>(new Set());
-  
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const currentScenario = SCENARIOS.find(s => s.id === activeScenarioId)!;
-  const currentStep = currentScenario.steps[cursor];
-  const isFinished = cursor >= currentScenario.steps.length;
+type Scenario = {
+  id: ScenarioId;
+  title: string;
+  subtitle: string;
+  backstageSummary: string;
+  backstageChips: { key: BackstageKey; label: string }[];
+  steps: Step[];
+};
 
-  // Reset ao trocar cenário
-  useEffect(() => {
-    setIsPlaying(false);
-    setCursor(0);
-    setActiveBackstageKeys(new Set());
-  }, [activeScenarioId]);
+// -----------------------------
+// 2) Scenarios (assets in /public)
+// -----------------------------
+const scenarios: Scenario[] = [
+  {
+    id: "onboarding",
+    title: "Onboarding & Segurança",
+    subtitle: "Entrada fácil e protegida",
+    backstageSummary:
+      "Valida CPF no CRM em milissegundos e registra o aceite LGPD para auditoria futura.",
+    backstageChips: [
+      { key: "crm-lookup", label: "Consulta no CRM" },
+      { key: "role-detection", label: "Perfil e Permissão" },
+      { key: "lgpd-consent", label: "Aceite LGPD" },
+      { key: "audit-log", label: "Registro p/ Auditoria" },
+    ],
+    steps: [
+      { id: "o-1", type: "text", from: "user", content: "Oi, quero ajudar na campanha.", delayMs: 500 },
+      { id: "o-2", type: "typing", from: "agent", delayMs: 450 },
+      {
+        id: "o-3",
+        type: "text",
+        from: "agent",
+        content: "Olá! Sou a IA do Candidato Zé. Para liberar seu acesso, digite apenas o seu CPF.",
+        delayMs: 650,
+        backstageKeys: ["crm-lookup"],
+      },
+      { id: "o-4", type: "text", from: "user", content: "000.111.222-33", delayMs: 600 },
+      { id: "o-5", type: "typing", from: "agent", delayMs: 500 },
+      {
+        id: "o-6",
+        type: "text",
+        from: "agent",
+        content: "✅ Identifiquei você, Carlos (Capitão Regional).",
+        delayMs: 650,
+        backstageKeys: ["role-detection"],
+      },
+      {
+        id: "o-7",
+        type: "text",
+        from: "agent",
+        content: "Para continuar, você concorda com nossos termos de uso e LGPD?",
+        delayMs: 650,
+        backstageKeys: ["lgpd-consent"],
+      },
+      {
+        id: "o-8",
+        type: "button",
+        from: "agent",
+        meta: { label: "👍 LI E CONCORDO" },
+        delayMs: 0,
+        blockUntilAction: true,
+        backstageKeys: ["audit-log"],
+      },
+      { id: "o-9", type: "text", from: "user", content: "Li e concordo.", delayMs: 0 },
+      { id: "o-10", type: "typing", from: "agent", delayMs: 350 },
+      { id: "o-11", type: "text", from: "agent", content: "Acesso liberado! 🔓 O que vamos fazer hoje?", delayMs: 550 },
+    ],
+  },
+  {
+    id: "kits",
+    title: "Entrega de Munição",
+    subtitle: "Áudio, rápido e sem links",
+    backstageSummary:
+      "Transcreve o áudio, entende o tema, busca no banco de kits aprovados e envia arquivo nativo.",
+    backstageChips: [
+      { key: "audio-transcription", label: "Transcrição do áudio" },
+      { key: "intent-detection", label: "Detecção de intenção" },
+      { key: "approved-kits", label: "Kits aprovados" },
+      { key: "native-send", label: "Envio nativo" },
+    ],
+    steps: [
+      { id: "k-1", type: "audio", from: "user", meta: { seconds: 8, label: "Áudio" }, delayMs: 600 },
+      { id: "k-2", type: "typing", from: "agent", delayMs: 450, backstageKeys: ["audio-transcription"] },
+      {
+        id: "k-3",
+        type: "text",
+        from: "agent",
+        content: "Entendido, Carlos! 🏥",
+        delayMs: 450,
+        backstageKeys: ["intent-detection"],
+      },
+      { id: "k-4", type: "typing", from: "agent", delayMs: 450, backstageKeys: ["approved-kits"] },
+      {
+        id: "k-5",
+        type: "text",
+        from: "agent",
+        content: "Aqui está o vídeo oficial aprovado pelo jurídico. Pode encaminhar!",
+        delayMs: 550,
+        backstageKeys: ["approved-kits"],
+      },
+      {
+        id: "k-6",
+        type: "file",
+        from: "agent",
+        meta: {
+          filename: "video_hospital_versao_final.mp4",
+          caption: "Saúde levada a sério! Compartilhe a verdade.",
+          thumbSrc: "/video-hospital-thumb.jpg",
+        },
+        delayMs: 650,
+        backstageKeys: ["native-send"],
+      },
+    ],
+  },
+  {
+    id: "fake-news",
+    title: "Combate a Boatos",
+    subtitle: "Caça-fantasmas de Fake News",
+    backstageSummary:
+      "Reconhece o texto viral, cruza com a base do War Room e devolve a resposta oficial aprovada.",
+    backstageChips: [
+      { key: "viral-match", label: "Match com boato" },
+      { key: "war-room-db", label: "Base do War Room" },
+      { key: "official-response", label: "Resposta oficial" },
+      { key: "instant-reply", label: "Retorno instantâneo" },
+    ],
+    steps: [
+      {
+        id: "f-1",
+        type: "forwarded",
+        from: "user",
+        content: "Dizem que o Zé vai fechar a escola do bairro...",
+        delayMs: 550,
+      },
+      { id: "f-2", type: "typing", from: "agent", delayMs: 450, backstageKeys: ["viral-match"] },
+      {
+        id: "f-3",
+        type: "text",
+        from: "agent",
+        content: "🚨 Atenção! Isso é FAKE NEWS.",
+        delayMs: 450,
+        backstageKeys: ["war-room-db"],
+      },
+      {
+        id: "f-4",
+        type: "text",
+        from: "agent",
+        content: "Já analisamos esse boato. A verdade é que a escola será reformada.",
+        delayMs: 550,
+        backstageKeys: ["official-response"],
+      },
+      {
+        id: "f-5",
+        type: "image",
+        from: "agent",
+        meta: { title: "card_desmentido_escola.jpg", src: "/fake-vs-fato-card.png" },
+        delayMs: 650,
+        backstageKeys: ["instant-reply"],
+      },
+      {
+        id: "f-6",
+        type: "text",
+        from: "agent",
+        content: "Mande esse card agora no grupo onde você viu a mentira!",
+        delayMs: 500,
+      },
+    ],
+  },
+  {
+    id: "ocr",
+    title: "Cadastro via Foto",
+    subtitle: "O fim da digitação",
+    backstageSummary:
+      "Extrai dados da imagem, ignora o fundo e formata o cadastro no CRM sem erro humano.",
+    backstageChips: [
+      { key: "vision-ocr", label: "Visão + OCR" },
+      { key: "field-extraction", label: "Extração de campos" },
+      { key: "crm-format", label: "Formatação CRM" },
+      { key: "human-error-reduction", label: "Menos erro humano" },
+    ],
+    steps: [
+      { id: "c-1", type: "text", from: "user", content: "Consegui mais um apoio aqui!", delayMs: 550 },
+      {
+        id: "c-2",
+        type: "image",
+        from: "user",
+        meta: { title: "Foto do Título de Eleitor", src: "/titulo-eleitor-ocr.jpg" },
+        delayMs: 650,
+      },
+      { id: "c-3", type: "typing", from: "agent", delayMs: 450, backstageKeys: ["vision-ocr"] },
+      {
+        id: "c-4",
+        type: "text",
+        from: "agent",
+        content: "Boa! Li os dados aqui:",
+        delayMs: 400,
+        backstageKeys: ["field-extraction"],
+      },
+      {
+        id: "c-5",
+        type: "text",
+        from: "agent",
+        content: "Nome: Maria da Silva\nZona: 123 / Seção: 045",
+        delayMs: 500,
+        backstageKeys: ["crm-format"],
+      },
+      {
+        id: "c-6",
+        type: "text",
+        from: "agent",
+        content: "Posso confirmar o cadastro dela na sua base de Lagarto?",
+        delayMs: 500,
+        backstageKeys: ["human-error-reduction"],
+      },
+      { id: "c-7", type: "text", from: "user", content: "Pode sim.", delayMs: 450 },
+      { id: "c-8", type: "typing", from: "agent", delayMs: 350 },
+      { id: "c-9", type: "text", from: "agent", content: "Fechado! Cadastro atualizado. ✅", delayMs: 450 },
+    ],
+  },
+  {
+    id: "fleet",
+    title: "Logística",
+    subtitle: "Organização de frota",
+    backstageSummary:
+      "Categorização do recurso, registro no perfil e preparação da logística do adesivaço.",
+    backstageChips: [
+      { key: "entity-categorization", label: "Entidade: Veículo" },
+      { key: "resource-logistics", label: "Logística" },
+      { key: "event-scheduling", label: "Agendamento" },
+    ],
+    steps: [
+      { id: "l-1", type: "text", from: "user", content: "Tenho um carro pra adesivar.", delayMs: 550 },
+      { id: "l-2", type: "typing", from: "agent", delayMs: 450, backstageKeys: ["entity-categorization"] },
+      { id: "l-3", type: "text", from: "agent", content: "Show! Qual o modelo e cor? 🚗", delayMs: 500 },
+      { id: "l-4", type: "text", from: "user", content: "É um Gol Prata.", delayMs: 550 },
+      { id: "l-5", type: "typing", from: "agent", delayMs: 450, backstageKeys: ["resource-logistics"] },
+      {
+        id: "l-6",
+        type: "text",
+        from: "agent",
+        content: "Anotado. Você prefere o adesivo do vidro traseiro todo (perfurado) ou só o lateral?",
+        delayMs: 650,
+      },
+      { id: "l-7", type: "text", from: "user", content: "O vidro todo.", delayMs: 500 },
+      { id: "l-8", type: "typing", from: "agent", delayMs: 400, backstageKeys: ["event-scheduling"] },
+      {
+        id: "l-9",
+        type: "text",
+        from: "agent",
+        content: "Perfeito. Sábado teremos um Pit Stop na Praça da Matriz. Te aviso o horário!",
+        delayMs: 650,
+      },
+      {
+        id: "l-10",
+        type: "image",
+        from: "agent",
+        meta: { title: "Logística e Frota", src: "/campanha-frota.png" },
+        delayMs: 650,
+      },
+    ],
+  },
+  {
+    id: "goals",
+    title: "Gerente de Metas",
+    subtitle: "Follow-up e motivação",
+    backstageSummary:
+      "Monitora progresso, dispara conversa por inatividade e atualiza gamificação e CRM.",
+    backstageChips: [
+      { key: "gamification-progress", label: "Progresso XP" },
+      { key: "inactivity-trigger", label: "Gatilho inatividade" },
+      { key: "crm-update", label: "Atualização CRM" },
+    ],
+    steps: [
+      { id: "g-1", type: "typing", from: "agent", delayMs: 500, backstageKeys: ["inactivity-trigger"] },
+      { id: "g-2", type: "text", from: "agent", content: "E aí, Carlos! 👋", delayMs: 450 },
+      {
+        id: "g-3",
+        type: "text",
+        from: "agent",
+        content: "Vi que faltam só 2 cadastros para você bater a meta da semana e ganhar +500 XP.",
+        delayMs: 650,
+        backstageKeys: ["gamification-progress"],
+      },
+      {
+        id: "g-4",
+        type: "text",
+        from: "agent",
+        content: "Conseguiu falar com aquele seu vizinho que estava indeciso?",
+        delayMs: 600,
+      },
+      { id: "g-5", type: "text", from: "user", content: "Falei sim, ele garantiu o voto!", delayMs: 550 },
+      { id: "g-6", type: "typing", from: "agent", delayMs: 400, backstageKeys: ["crm-update"] },
+      { id: "g-7", type: "text", from: "agent", content: "Excelente! Já atualizei aqui. 🚀 Falta só 1 agora!", delayMs: 600 },
+      {
+        id: "g-8",
+        type: "image",
+        from: "agent",
+        meta: { title: "Gamificação e Metas", src: "/gamificacao-metas.png" },
+        delayMs: 650,
+      },
+    ],
+  },
+];
 
-  // Engine de Playback
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
+// -----------------------------
+// 3) Store + Playback
+// -----------------------------
+type Status = "idle" | "playing" | "paused" | "finished";
 
-    if (isPlaying && !isFinished && currentStep) {
-      // Se for botão, PAUSA e espera clique.
-      if (currentStep.type === 'button') {
-        setIsPlaying(false);
-        return;
-      }
+type SimState = {
+  selectedScenarioId: ScenarioId;
+  status: Status;
+  cursor: number;
+  speed: 1 | 1.5 | 2;
+  blocked: boolean;
 
-      const realDelay = currentStep.delayMs / speed;
+  setScenario: (id: ScenarioId) => void;
+  play: () => void;
+  pause: () => void;
+  replay: () => void;
+  setSpeed: (s: 1 | 1.5 | 2) => void;
 
-      timeout = setTimeout(() => {
-        // Ativar chips do backstage do passo atual
-        if (currentStep.backstageKeys) {
-          setActiveBackstageKeys(prev => {
-            const next = new Set(prev);
-            currentStep.backstageKeys?.forEach(k => next.add(k));
-            return next;
-          });
-        }
-        
-        setCursor(c => c + 1);
-      }, realDelay);
+  advance: () => void;
+  resolveBlockAndContinue: () => void;
+
+  getScenario: () => Scenario;
+  getSteps: () => Step[];
+  getVisibleSteps: () => Step[];
+  getActiveKeys: () => Set<BackstageKey>;
+};
+
+const useSim = create<SimState>((set, get) => ({
+  selectedScenarioId: "onboarding",
+  status: "idle",
+  cursor: 0,
+  speed: 1,
+  blocked: false,
+
+  setScenario: (id) => set({ selectedScenarioId: id, status: "idle", cursor: 0, blocked: false }),
+
+  play: () => set({ status: "playing" }),
+  pause: () => set({ status: "paused" }),
+  replay: () => set({ status: "playing", cursor: 0, blocked: false }),
+  setSpeed: (s) => set({ speed: s }),
+
+  getScenario: () => scenarios.find((x) => x.id === get().selectedScenarioId)!,
+  getSteps: () => get().getScenario().steps,
+  getVisibleSteps: () => get().getSteps().slice(0, get().cursor),
+
+  getActiveKeys: () => {
+    const keys = new Set<BackstageKey>();
+    get().getVisibleSteps().forEach((st) => st.backstageKeys?.forEach((k) => keys.add(k)));
+    return keys;
+  },
+
+  advance: () => {
+    const { cursor } = get();
+    const all = get().getSteps();
+    if (cursor >= all.length) {
+      set({ status: "finished" });
+      return;
     }
 
-    return () => clearTimeout(timeout);
-  }, [isPlaying, cursor, currentStep, speed, isFinished]);
+    const next = all[cursor];
+    const nextCursor = cursor + 1;
+    const shouldBlock = next.type === "button" && next.blockUntilAction;
 
-  // Auto-scroll
+    set({
+      cursor: nextCursor,
+      blocked: shouldBlock ? true : get().blocked,
+      status: nextCursor >= all.length ? "finished" : get().status,
+    });
+  },
+
+  resolveBlockAndContinue: () => {
+    // Unblock, then immediately advance to show next step (often the user's confirmation)
+    set({ blocked: false });
+    get().advance();
+    set({ status: "playing" });
+  },
+}));
+
+function usePlayback() {
+  const timerRef = useRef<number | null>(null);
+
+  const status = useSim((s) => s.status);
+  const speed = useSim((s) => s.speed);
+  const blocked = useSim((s) => s.blocked);
+  const cursor = useSim((s) => s.cursor);
+  const getSteps = useSim((s) => s.getSteps);
+  const advance = useSim((s) => s.advance);
+
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-    }
-  }, [cursor, currentStep?.type]);
+    if (timerRef.current) window.clearTimeout(timerRef.current);
 
-  // Controles
-  const handlePlayPause = () => {
-    if (isFinished) {
-      setCursor(0);
-      setActiveBackstageKeys(new Set());
-    }
-    setIsPlaying(!isPlaying);
-  };
+    if (status !== "playing") return;
+    if (blocked) return;
 
-  const handleReplay = () => {
-    setCursor(0);
-    setActiveBackstageKeys(new Set());
-    setIsPlaying(true);
-  };
+    const steps = getSteps();
+    if (cursor >= steps.length) return;
 
-  const handleButtonClick = () => {
-    // Avança manual quando clica no botão do chat
-    setCursor(c => c + 1);
-    setIsPlaying(true);
-  };
+    const next = steps[cursor];
+    const delay = (next.delayMs ?? 0) / speed;
 
-  // Renderização dos passos visíveis (até o cursor)
-  // Nota: Se o currentStep for 'typing', ele não entra na lista "visibleHistory", ele é renderizado à parte
-  const visibleHistory = currentScenario.steps.slice(0, cursor).filter(s => s.type !== 'typing');
-  const isTyping = currentStep?.type === 'typing' && isPlaying;
+    timerRef.current = window.setTimeout(() => {
+      advance();
+    }, Math.max(0, delay));
+
+    return () => {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+    };
+  }, [status, speed, blocked, cursor, getSteps, advance]);
+}
+
+// -----------------------------
+// 4) UI Helpers
+// -----------------------------
+function cn(...classes: Array<string | false | undefined | null>) {
+  return classes.filter(Boolean).join(" ");
+}
+
+function formatSeconds(s: number) {
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, "0")}`;
+}
+
+// -----------------------------
+// 5) Components (in-file)
+// -----------------------------
+function ScenarioMenu() {
+  const selected = useSim((s) => s.selectedScenarioId);
+  const setScenario = useSim((s) => s.setScenario);
+  const replay = useSim((s) => s.replay);
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 animate-fade-in flex flex-col">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <Card className="bg-zinc-950/40 border-zinc-800 p-3">
+      <div className="flex items-center justify-between px-1 pb-2">
+        <div className="text-sm font-semibold text-zinc-100">Cenários</div>
+        <Badge variant="secondary" className="bg-zinc-900 text-zinc-200 border border-zinc-800">
+          Simulador
+        </Badge>
+      </div>
+
+      <div className="space-y-2">
+        {scenarios.map((sc) => {
+          const is = sc.id === selected;
+          return (
+            <button
+              key={sc.id}
+              onClick={() => {
+                setScenario(sc.id);
+                replay();
+              }}
+              className={cn(
+                "w-full text-left rounded-lg border px-3 py-3 transition",
+                is
+                  ? "border-zinc-700 bg-zinc-900/70"
+                  : "border-zinc-900 bg-zinc-950/30 hover:bg-zinc-900/40 hover:border-zinc-800"
+              )}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="text-sm font-semibold text-zinc-100">{sc.title}</div>
+                  <div className="text-xs text-zinc-400 mt-0.5">{sc.subtitle}</div>
+                </div>
+                <ChevronRight className={cn("h-4 w-4 mt-0.5 text-zinc-500", is && "text-zinc-200")} />
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
+function PlayerControls() {
+  const status = useSim((s) => s.status);
+  const speed = useSim((s) => s.speed);
+  const play = useSim((s) => s.play);
+  const pause = useSim((s) => s.pause);
+  const replay = useSim((s) => s.replay);
+  const setSpeed = useSim((s) => s.setSpeed);
+
+  const isPlaying = status === "playing";
+
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant={isPlaying ? "secondary" : "default"}
+          onClick={() => (isPlaying ? pause() : play())}
+          className={cn(
+            "border",
+            isPlaying ? "bg-zinc-900 border-zinc-800 text-zinc-100" : "bg-white text-zinc-900 border-white"
+          )}
+        >
+          {isPlaying ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
+          {isPlaying ? "Pausar" : "Play"}
+        </Button>
+
+        <Button
+          size="sm"
+          variant="secondary"
+          onClick={replay}
+          className="bg-zinc-900 border border-zinc-800 text-zinc-100"
+        >
+          <RotateCcw className="h-4 w-4 mr-2" />
+          Replay
+        </Button>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <div className="text-xs text-zinc-400 hidden sm:block">Velocidade</div>
+        {[1, 1.5, 2].map((v) => (
+          <Button
+            key={v}
+            size="sm"
+            variant="secondary"
+            onClick={() => setSpeed(v as 1 | 1.5 | 2)}
+            className={cn(
+              "bg-zinc-900 border border-zinc-800 text-zinc-100",
+              speed === v && "ring-1 ring-white/30"
+            )}
+          >
+            {v}x
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function PhoneStage({ steps }: { steps: Step[] }) {
+  const blocked = useSim((s) => s.blocked);
+  const resolveBlockAndContinue = useSim((s) => s.resolveBlockAndContinue);
+
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [steps.length]);
+
+  const currentScenario = useSim((s) => s.getScenario());
+
+  // Find last visible button step (if any) and check if it's blocking
+  const lastStep = steps[steps.length - 1];
+  const showBlockHint = blocked && lastStep?.type === "button";
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-2">
-            <Bot className="w-8 h-8 text-primary" />
-            Cérebro do WhatsApp
-          </h1>
-          <p className="text-muted-foreground mt-1">Simulador de fluxos e capacidades do Agente GovMesh.</p>
+          <div className="text-lg font-semibold text-zinc-100">Cérebro do WhatsApp</div>
+          <div className="text-sm text-zinc-400">{currentScenario.title}</div>
         </div>
-        
-        {/* Controls Bar */}
-        <div className="flex items-center gap-4 bg-card border border-border p-2 rounded-xl shadow-sm">
-          <div className="flex items-center gap-1">
-             <Button variant="ghost" size="icon" onClick={handlePlayPause} className={cn("h-8 w-8", isPlaying && "text-green-500")}>
-               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-             </Button>
-             <Button variant="ghost" size="icon" onClick={handleReplay} className="h-8 w-8">
-               <RotateCcw className="w-4 h-4" />
-             </Button>
-          </div>
-          <div className="h-4 w-px bg-border" />
-          <div className="flex items-center gap-2 px-2">
-             <span className="text-xs font-bold text-muted-foreground">Velocidade: {speed}x</span>
-             <div className="flex gap-1">
-               {[1, 1.5, 2].map(s => (
-                 <button 
-                   key={s} 
-                   onClick={() => setSpeed(s)}
-                   className={cn("w-6 h-6 text-[10px] rounded border transition-all", speed === s ? "bg-primary text-white border-primary" : "bg-transparent text-muted-foreground border-border")}
-                 >
-                   {s}x
-                 </button>
-               ))}
-             </div>
-          </div>
+        <div className="hidden md:block">
+          <PlayerControls />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 min-h-[600px]">
-        
-        {/* COLUNA 1: MENU (3 cols) */}
-        <div className="lg:col-span-3 flex flex-col gap-3 overflow-y-auto pr-2 custom-scrollbar h-[calc(100vh-200px)]">
-          {SCENARIOS.map((scenario) => (
-            <button
-              key={scenario.id}
-              onClick={() => setActiveScenarioId(scenario.id)}
+      <Card className="bg-zinc-950/40 border-zinc-800 p-4">
+        {/* Phone mock */}
+        <div className="mx-auto max-w-[420px]">
+          <div className="rounded-[32px] border border-zinc-800 bg-zinc-950 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_25px_80px_rgba(0,0,0,0.55)] overflow-hidden">
+            {/* Top bar */}
+            <div className="px-4 py-3 border-b border-zinc-900 bg-zinc-950/80">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-zinc-100">
+                    GovMesh Assist <span className="text-green-400">✅</span>
+                  </div>
+                  <div className="text-xs text-zinc-400">Conta Comercial Oficial</div>
+                </div>
+                <Badge className="bg-zinc-900 border border-zinc-800 text-zinc-200">Online</Badge>
+              </div>
+            </div>
+
+            {/* Chat */}
+            <div className="h-[520px] bg-[radial-gradient(ellipse_at_top,rgba(34,197,94,0.10),transparent_50%),radial-gradient(ellipse_at_bottom,rgba(255,255,255,0.03),transparent_55%)]">
+              <div ref={scrollRef} className="h-full overflow-y-auto px-3 py-4">
+                <MessageList
+                  steps={steps}
+                  onButtonClick={() => resolveBlockAndContinue()}
+                />
+
+                {showBlockHint && (
+                  <div className="mt-3 flex justify-center">
+                    <div className="text-xs text-zinc-400 bg-zinc-950/70 border border-zinc-800 rounded-full px-3 py-1">
+                      Clique no botão para continuar
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Composer (visual only) */}
+            <div className="px-3 py-3 border-t border-zinc-900 bg-zinc-950/80">
+              <div className="h-10 rounded-full bg-zinc-900/60 border border-zinc-800 flex items-center px-4 text-sm text-zinc-500">
+                Mensagem...
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 md:hidden">
+            <PlayerControls />
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function BackstagePanel() {
+  const scenario = useSim((s) => s.getScenario());
+  const activeKeys = useSim((s) => s.getActiveKeys());
+
+  return (
+    <Card className="bg-zinc-950/40 border-zinc-800 p-4">
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-semibold text-zinc-100">Nos Bastidores</div>
+        <div className="flex items-center gap-2 text-xs text-zinc-400">
+          <Zap className="h-4 w-4 text-green-400" />
+          automação
+        </div>
+      </div>
+
+      <div className="mt-3 text-sm text-zinc-300 leading-relaxed">
+        {scenario.backstageSummary}
+      </div>
+
+      <Separator className="my-4 bg-zinc-900" />
+
+      <div className="text-xs font-semibold text-zinc-200 mb-2">Etapas técnicas</div>
+      <div className="flex flex-wrap gap-2">
+        {scenario.backstageChips.map((chip) => {
+          const on = activeKeys.has(chip.key);
+          return (
+            <span
+              key={chip.key}
               className={cn(
-                "flex items-start gap-3 p-4 rounded-xl text-left transition-all duration-300 border group relative overflow-hidden",
-                activeScenarioId === scenario.id 
-                  ? "bg-primary/10 border-primary shadow-md" 
-                  : "bg-card hover:bg-card/80 border-border"
+                "inline-flex items-center rounded-full border px-2.5 py-1 text-xs transition",
+                on
+                  ? "bg-green-500/10 border-green-500/30 text-green-200"
+                  : "bg-zinc-950/30 border-zinc-800 text-zinc-400"
               )}
             >
-              {activeScenarioId === scenario.id && <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />}
-              <div className={cn(
-                "p-2 rounded-lg shrink-0 transition-colors",
-                activeScenarioId === scenario.id ? "bg-primary text-white" : "bg-secondary text-muted-foreground group-hover:text-foreground"
-              )}>
-                <scenario.icon className="w-5 h-5" />
-              </div>
-              <div>
-                <h4 className={cn("font-bold text-sm", activeScenarioId === scenario.id ? "text-primary" : "text-foreground")}>
-                  {scenario.title}
-                </h4>
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                  {scenario.description}
-                </p>
-              </div>
-            </button>
-          ))}
+              <span className={cn("mr-2 h-1.5 w-1.5 rounded-full", on ? "bg-green-400" : "bg-zinc-600")} />
+              {chip.label}
+            </span>
+          );
+        })}
+      </div>
+
+      <Separator className="my-4 bg-zinc-900" />
+
+      <div className="text-xs text-zinc-500">
+        Dica: use Play, Pause e Velocidade para ver como a IA reage em tempo real.
+      </div>
+    </Card>
+  );
+}
+
+function MessageList({
+  steps,
+  onButtonClick,
+}: {
+  steps: Step[];
+  onButtonClick: () => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <AnimatePresence initial={false}>
+        {steps.map((st) => (
+          <motion.div
+            key={st.id}
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+          >
+            <MessageRenderer step={st} onButtonClick={onButtonClick} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function MessageRenderer({ step, onButtonClick }: { step: Step; onButtonClick: () => void }) {
+  const isUser = "from" in step && step.from === "user";
+  const align = isUser ? "justify-end" : "justify-start";
+  const bubbleBase =
+    "max-w-[82%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-line";
+  const bubbleStyle = isUser
+    ? "bg-green-500 text-zinc-950"
+    : "bg-zinc-900/80 border border-zinc-800 text-zinc-100";
+
+  if (step.type === "typing") {
+    return (
+      <div className={cn("flex", align)}>
+        <div className={cn(bubbleBase, bubbleStyle, "py-2")}>
+          <TypingDots />
         </div>
+      </div>
+    );
+  }
 
-        {/* COLUNA 2: PHONE STAGE (5 cols) */}
-        <div className="lg:col-span-5 flex items-center justify-center bg-black/5 rounded-3xl border border-black/5 relative p-4">
-           {/* MOCKUP */}
-           <div className="relative w-full max-w-[350px] aspect-[9/19.5] bg-black rounded-[2.5rem] border-[8px] border-slate-800 shadow-2xl overflow-hidden flex flex-col z-10">
-              {/* Notch */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-b-xl z-20 flex justify-center items-end pb-1">
-                 <div className="w-12 h-1 bg-slate-800 rounded-full" />
+  if (step.type === "text") {
+    return (
+      <div className={cn("flex", align)}>
+        <div className={cn(bubbleBase, bubbleStyle)}>{step.content}</div>
+      </div>
+    );
+  }
+
+  if (step.type === "forwarded") {
+    return (
+      <div className={cn("flex", align)}>
+        <div className={cn(bubbleBase, bubbleStyle)}>
+          <div className={cn("text-xs mb-1", isUser ? "text-zinc-800" : "text-zinc-400")}>
+            Mensagem encaminhada ↪️
+          </div>
+          <div>{step.content}</div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step.type === "audio") {
+    return (
+      <div className={cn("flex", align)}>
+        <div className={cn(bubbleBase, bubbleStyle)}>
+          <div className="flex items-center gap-3">
+            <div className={cn("h-8 w-8 rounded-full grid place-items-center", isUser ? "bg-black/10" : "bg-white/10")}>
+              <Play className={cn("h-4 w-4", isUser ? "text-zinc-950" : "text-zinc-100")} />
+            </div>
+            <div className="flex-1">
+              <div className={cn("h-1.5 rounded-full overflow-hidden", isUser ? "bg-black/10" : "bg-white/10")}>
+                <div className={cn("h-full w-[38%] rounded-full", isUser ? "bg-black/30" : "bg-white/30")} />
               </div>
-
-              {/* Header WhatsApp */}
-              <div className="bg-[#202c33] px-4 pt-8 pb-3 flex items-center gap-3 border-b border-white/5 z-10 shadow-md">
-                 <ChevronLeft className="w-6 h-6 text-blue-400 -ml-2" />
-                 <div className="w-9 h-9 rounded-full bg-primary flex items-center justify-center text-white">
-                   <Bot className="w-5 h-5" />
-                 </div>
-                 <div className="flex-1 cursor-pointer">
-                   <h3 className="text-gray-100 text-sm font-semibold flex items-center gap-1">
-                     GovMesh Assist <CheckCheck className="w-3 h-3 text-green-500" />
-                   </h3>
-                   <p className="text-[10px] text-gray-400">Conta comercial oficial</p>
-                 </div>
+              <div className={cn("mt-1 text-xs", isUser ? "text-zinc-800" : "text-zinc-400")}>
+                {step.meta.label ?? "Áudio"} • {formatSeconds(step.meta.seconds)}
               </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-              {/* Chat Area */}
-              <div 
-                ref={scrollRef}
-                className="flex-1 bg-[#0b141a] p-4 overflow-y-auto space-y-1 relative scroll-smooth"
-                style={{ backgroundImage: 'radial-gradient(#1f2c34 1px, transparent 1px)', backgroundSize: '20px 20px' }}
-              >
-                <div className="text-[10px] text-center text-[#8696a0] bg-[#182229] py-1 px-3 rounded-lg mx-auto w-fit mb-4 shadow-sm select-none">
-                  🔒 As mensagens são protegidas com criptografia de ponta-a-ponta.
+  if (step.type === "file") {
+    return (
+      <div className={cn("flex", align)}>
+        <div className={cn(bubbleBase, bubbleStyle)}>
+          <div className="flex gap-3">
+            {step.meta.thumbSrc ? (
+              <img
+                src={step.meta.thumbSrc}
+                alt="thumb"
+                className="h-14 w-20 rounded-lg object-cover border border-zinc-800"
+                loading="lazy"
+              />
+            ) : (
+              <div className="h-14 w-20 rounded-lg bg-zinc-800/40 border border-zinc-800" />
+            )}
+            <div className="min-w-0">
+              <div className={cn("text-xs", isUser ? "text-zinc-800" : "text-zinc-400")}>Arquivo</div>
+              <div className="text-sm font-semibold break-all">{step.meta.filename}</div>
+              {step.meta.caption && (
+                <div className={cn("mt-1 text-xs", isUser ? "text-zinc-800" : "text-zinc-400")}>
+                  {step.meta.caption}
                 </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-                {visibleHistory.map((step) => (
-                  <MessageBubble key={step.id} step={step} onButtonClick={handleButtonClick} />
-                ))}
+  if (step.type === "image") {
+    return (
+      <div className={cn("flex", align)}>
+        <div className={cn(bubbleBase, bubbleStyle, "p-2")}>
+          <img
+            src={step.meta.src}
+            alt={step.meta.title}
+            className="w-full max-w-[280px] rounded-xl border border-zinc-800 object-cover"
+            loading="lazy"
+          />
+          <div className={cn("mt-1 px-1 text-xs", isUser ? "text-zinc-800" : "text-zinc-400")}>
+            {step.meta.title}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-                {isTyping && (
-                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex justify-start mb-2">
-                    <div className="bg-[#202c33] rounded-lg rounded-tl-none p-3 flex gap-1 items-center h-9 w-16 justify-center">
-                      <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-1.5 h-1.5 bg-gray-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
-                  </motion.div>
-                )}
-                
-                <div className="h-4" /> {/* Spacer footer */}
-              </div>
+  if (step.type === "button") {
+    return (
+      <div className={cn("flex", align)}>
+        <div className={cn(bubbleBase, bubbleStyle, "p-2")}>
+          <Button
+            onClick={onButtonClick}
+            className={cn(
+              "w-full rounded-xl",
+              isUser
+                ? "bg-zinc-950 text-white hover:bg-zinc-900"
+                : "bg-white text-zinc-900 hover:bg-zinc-100"
+            )}
+          >
+            {step.meta.label}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-              {/* Footer Input */}
-              <div className="bg-[#202c33] p-2 flex items-center gap-2 pb-5 pt-3">
-                 <div className="flex-1 bg-[#2a3942] rounded-full h-9 flex items-center px-4 text-gray-400 text-sm justify-between">
-                   <span>Mensagem</span>
-                   <FileText className="w-4 h-4 opacity-50" />
-                 </div>
-                 <div className="w-10 h-10 bg-[#005c4b] rounded-full flex items-center justify-center shadow-lg">
-                   <Mic className="w-5 h-5 text-white" />
-                 </div>
-              </div>
-           </div>
+  return null;
+}
+
+function TypingDots() {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="h-2 w-2 rounded-full bg-white/60 animate-bounce [animation-delay:-0.2s]" />
+      <span className="h-2 w-2 rounded-full bg-white/60 animate-bounce [animation-delay:-0.1s]" />
+      <span className="h-2 w-2 rounded-full bg-white/60 animate-bounce" />
+    </div>
+  );
+}
+
+// -----------------------------
+// 6) Page
+// -----------------------------
+export default function SimulatorPage() {
+  usePlayback();
+
+  const selectedId = useSim((s) => s.selectedScenarioId);
+  const visibleSteps = useSim((s) => s.getVisibleSteps());
+  const replay = useSim((s) => s.replay);
+  const play = useSim((s) => s.play);
+
+  const scenario = useMemo(() => scenarios.find((x) => x.id === selectedId)!, [selectedId]);
+
+  useEffect(() => {
+    // Auto-start on first load
+    replay();
+    play();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <div className="mx-auto max-w-7xl px-4 py-10">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="text-2xl font-semibold">Simulador Interativo</div>
+          <div className="text-sm text-zinc-400 mt-1">
+            Selecione um cenário e veja a conversa acontecendo. O painel da direita mostra o que a IA fez por trás.
+          </div>
         </div>
 
-        {/* COLUNA 3: BACKSTAGE (4 cols) */}
-        <div className="lg:col-span-4 flex flex-col justify-center">
-           <AnimatePresence mode="wait">
-             <motion.div 
-               key={currentScenario.id}
-               initial={{ opacity: 0, x: 20 }}
-               animate={{ opacity: 1, x: 0 }}
-               exit={{ opacity: 0, x: -20 }}
-               className="bg-card border border-border p-6 rounded-2xl relative overflow-hidden shadow-xl"
-             >
-               {/* Background Tech Effect */}
-               <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-                 <Zap className="w-32 h-32 rotate-12" />
-               </div>
+        {/* Layout */}
+        <div className="grid grid-cols-12 gap-6">
+          <div className="col-span-12 lg:col-span-3">
+            <ScenarioMenu />
+          </div>
 
-               <Badge className="bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 mb-6 border-purple-500/20">
-                 NOS BASTIDORES
-               </Badge>
-               
-               <h3 className="text-xl font-bold text-foreground mb-4">
-                 Processamento em Tempo Real
-               </h3>
-               
-               <p className="text-muted-foreground leading-relaxed text-sm mb-6">
-                 {currentScenario.techSummary}
-               </p>
+          <div className="col-span-12 lg:col-span-6">
+            <PhoneStage steps={visibleSteps} />
+          </div>
 
-               <div className="space-y-3">
-                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Pipeline de Execução:</p>
-                 <div className="flex flex-col gap-2">
-                   {currentScenario.techChips.map((chip, idx) => {
-                     const isActive = activeBackstageKeys.has(chip);
-                     return (
-                       <div 
-                         key={chip}
-                         className={cn(
-                           "flex items-center justify-between p-3 rounded-lg border transition-all duration-500",
-                           isActive 
-                             ? "bg-green-500/10 border-green-500/30 text-green-400 translate-x-2 shadow-[0_0_10px_rgba(34,197,94,0.1)]" 
-                             : "bg-secondary/30 border-border text-muted-foreground"
-                         )}
-                       >
-                         <div className="flex items-center gap-3 text-sm font-medium">
-                           <div className={cn("w-2 h-2 rounded-full", isActive ? "bg-green-500 animate-pulse" : "bg-gray-600")} />
-                           {chip}
-                         </div>
-                         {isActive && <Check className="w-4 h-4 animate-in zoom-in" />}
-                       </div>
-                     );
-                   })}
-                 </div>
-               </div>
+          <div className="col-span-12 lg:col-span-3 space-y-4">
+            <BackstagePanel />
 
-               {/* Status Bar */}
-               <div className="mt-8 pt-6 border-t border-border flex justify-between items-center">
-                 <div className="text-xs text-muted-foreground">Latência média: <span className="text-green-400 font-mono">45ms</span></div>
-                 <div className="flex gap-1">
-                   <div className="w-1 h-3 bg-green-500 rounded-full animate-pulse" />
-                   <div className="w-1 h-2 bg-green-500/50 rounded-full" />
-                   <div className="w-1 h-4 bg-green-500/80 rounded-full animate-pulse delay-75" />
-                 </div>
-               </div>
-             </motion.div>
-           </AnimatePresence>
+            <Card className="bg-zinc-950/40 border-zinc-800 p-4">
+              <div className="text-sm font-semibold text-zinc-100">Cenário atual</div>
+              <div className="mt-2 text-sm text-zinc-300">{scenario.title}</div>
+              <div className="text-xs text-zinc-400 mt-1">{scenario.subtitle}</div>
+              <Separator className="my-4 bg-zinc-900" />
+              <div className="text-xs text-zinc-500">
+                Assets esperados em <span className="text-zinc-300">/public</span>:
+                <div className="mt-2 grid gap-1">
+                  <span className="text-zinc-400">/fake-vs-fato-card.png</span>
+                  <span className="text-zinc-400">/titulo-eleitor-ocr.jpg</span>
+                  <span className="text-zinc-400">/video-hospital-thumb.jpg</span>
+                  <span className="text-zinc-400">/campanha-frota.png</span>
+                  <span className="text-zinc-400">/gamificacao-metas.png</span>
+                </div>
+              </div>
+            </Card>
+          </div>
         </div>
-
       </div>
     </div>
   );
