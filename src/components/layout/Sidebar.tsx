@@ -11,29 +11,34 @@ import {
   Sparkles,
   Scale,
   Trophy,
-  Activity, // Radar
-  Ear,      // Escuta Ativa
-  Bot       // Simulador (Novo)
+  Activity,
+  Ear,
+  Bot // Ícone do Simulador
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGovMesh } from '@/contexts/GovMeshContext';
 
 const allNavItems = [
+  // 1. Visão Geral
   { icon: LayoutDashboard, label: 'Dashboard', path: '/', profiles: ['Admin', 'Jurídico', 'Liderança', 'Apoiador'] },
   
-  // Vitrine de Capacidades (Novos)
-  { icon: Bot, label: 'Simulador WhatsApp', path: '/simulador', profiles: ['Admin', 'Liderança'] },
+  // 2. Inteligência & Monitoramento
   { icon: Activity, label: 'Radar das Redes', path: '/radar', profiles: ['Admin', 'Jurídico', 'Liderança'] },
   { icon: Ear, label: 'Escuta Ativa', path: '/escuta', profiles: ['Admin', 'Liderança', 'Apoiador'] },
 
-  // Operacional
+  // 3. Operacional & Mobilização
   { icon: FolderKanban, label: 'Kits', path: '/kits', profiles: ['Admin', 'Jurídico', 'Liderança', 'Apoiador'] },
   { icon: Sparkles, label: 'GovMesh Assist', path: '/assist', profiles: ['Admin', 'Jurídico', 'Liderança', 'Apoiador'] },
   { icon: Users, label: 'CRM Mobilização', path: '/crm', profiles: ['Admin', 'Liderança'] },
   { icon: Trophy, label: 'Gamificação', path: '/gamificacao', profiles: ['Admin', 'Liderança', 'Apoiador'] },
+  
+  // 4. Jurídico & Compliance
   { icon: Scale, label: 'Aprovação Jurídica', path: '/juridico', profiles: ['Admin', 'Jurídico'] },
   { icon: AlertTriangle, label: 'Boatos', path: '/boatos', profiles: ['Admin', 'Jurídico', 'Liderança'] },
   { icon: FileText, label: 'Auditoria', path: '/auditoria', profiles: ['Admin', 'Jurídico'] },
+
+  // 5. Vitrine (Simulador) - Agora no final
+  { icon: Bot, label: 'Simulador WhatsApp', path: '/simulador', profiles: ['Admin', 'Liderança'] },
 ];
 
 const bottomItems = [
