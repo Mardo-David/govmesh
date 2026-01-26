@@ -1,18 +1,28 @@
 // src/pages/SimulatorPage.tsx
-import React, { useEffect, useMemo, useRef } from "react";
-import { create } from "zustand";
+import React, { useEffect, useMemo, useReducer, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Play, Pause, RotateCcw, ChevronRight, Zap } from "lucide-react";
 
-// If your shadcn/ui paths differ, adjust these imports.
-// Common Vite setups use: "@/components/ui/..."
+// Ajuste os imports do shadcn/ui conforme seu projeto (ex: "@/components/ui/...")
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Separator } from "../components/ui/separator";
 
 // -----------------------------
-// 1) Types
+// 1) Helpers
+// -----------------------------
+function cn(...classes: Array<string | false | undefined | null>) {
+  return classes.filter(Boolean).join(" ");
+}
+function formatSeconds(s: number) {
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}:${String(r).padStart(2, "0")}`;
+}
+
+// -----------------------------
+// 2) Types
 // -----------------------------
 type ScenarioId = "onboarding" | "kits" | "fake-news" | "ocr" | "fleet" | "goals";
 type Actor = "user" | "agent";
@@ -69,7 +79,7 @@ type Scenario = {
 };
 
 // -----------------------------
-// 2) Scenarios (assets in /public)
+// 3) Scenarios (assets in /public)
 // -----------------------------
 const scenarios: Scenario[] = [
   {
@@ -122,6 +132,7 @@ const scenarios: Scenario[] = [
         blockUntilAction: true,
         backstageKeys: ["audit-log"],
       },
+      // Esse step aparece só depois do clique (porque o autoplay bloqueia no step do botão)
       { id: "o-9", type: "text", from: "user", content: "Li e concordo.", delayMs: 0 },
       { id: "o-10", type: "typing", from: "agent", delayMs: 350 },
       { id: "o-11", type: "text", from: "agent", content: "Acesso liberado! 🔓 O que vamos fazer hoje?", delayMs: 550 },
@@ -186,45 +197,12 @@ const scenarios: Scenario[] = [
       { key: "instant-reply", label: "Retorno instantâneo" },
     ],
     steps: [
-      {
-        id: "f-1",
-        type: "forwarded",
-        from: "user",
-        content: "Dizem que o Zé vai fechar a escola do bairro...",
-        delayMs: 550,
-      },
+      { id: "f-1", type: "forwarded", from: "user", content: "Dizem que o Zé vai fechar a escola do bairro...", delayMs: 550 },
       { id: "f-2", type: "typing", from: "agent", delayMs: 450, backstageKeys: ["viral-match"] },
-      {
-        id: "f-3",
-        type: "text",
-        from: "agent",
-        content: "🚨 Atenção! Isso é FAKE NEWS.",
-        delayMs: 450,
-        backstageKeys: ["war-room-db"],
-      },
-      {
-        id: "f-4",
-        type: "text",
-        from: "agent",
-        content: "Já analisamos esse boato. A verdade é que a escola será reformada.",
-        delayMs: 550,
-        backstageKeys: ["official-response"],
-      },
-      {
-        id: "f-5",
-        type: "image",
-        from: "agent",
-        meta: { title: "card_desmentido_escola.jpg", src: "/fake-vs-fato-card.png" },
-        delayMs: 650,
-        backstageKeys: ["instant-reply"],
-      },
-      {
-        id: "f-6",
-        type: "text",
-        from: "agent",
-        content: "Mande esse card agora no grupo onde você viu a mentira!",
-        delayMs: 500,
-      },
+      { id: "f-3", type: "text", from: "agent", content: "🚨 Atenção! Isso é FAKE NEWS.", delayMs: 450, backstageKeys: ["war-room-db"] },
+      { id: "f-4", type: "text", from: "agent", content: "Já analisamos esse boato. A verdade é que a escola será reformada.", delayMs: 550, backstageKeys: ["official-response"] },
+      { id: "f-5", type: "image", from: "agent", meta: { title: "card_desmentido_escola.jpg", src: "/fake-vs-fato-card.png" }, delayMs: 650, backstageKeys: ["instant-reply"] },
+      { id: "f-6", type: "text", from: "agent", content: "Mande esse card agora no grupo onde você viu a mentira!", delayMs: 500 },
     ],
   },
   {
@@ -241,38 +219,11 @@ const scenarios: Scenario[] = [
     ],
     steps: [
       { id: "c-1", type: "text", from: "user", content: "Consegui mais um apoio aqui!", delayMs: 550 },
-      {
-        id: "c-2",
-        type: "image",
-        from: "user",
-        meta: { title: "Foto do Título de Eleitor", src: "/titulo-eleitor-ocr.jpg" },
-        delayMs: 650,
-      },
+      { id: "c-2", type: "image", from: "user", meta: { title: "Foto do Título de Eleitor", src: "/titulo-eleitor-ocr.jpg" }, delayMs: 650 },
       { id: "c-3", type: "typing", from: "agent", delayMs: 450, backstageKeys: ["vision-ocr"] },
-      {
-        id: "c-4",
-        type: "text",
-        from: "agent",
-        content: "Boa! Li os dados aqui:",
-        delayMs: 400,
-        backstageKeys: ["field-extraction"],
-      },
-      {
-        id: "c-5",
-        type: "text",
-        from: "agent",
-        content: "Nome: Maria da Silva\nZona: 123 / Seção: 045",
-        delayMs: 500,
-        backstageKeys: ["crm-format"],
-      },
-      {
-        id: "c-6",
-        type: "text",
-        from: "agent",
-        content: "Posso confirmar o cadastro dela na sua base de Lagarto?",
-        delayMs: 500,
-        backstageKeys: ["human-error-reduction"],
-      },
+      { id: "c-4", type: "text", from: "agent", content: "Boa! Li os dados aqui:", delayMs: 400, backstageKeys: ["field-extraction"] },
+      { id: "c-5", type: "text", from: "agent", content: "Nome: Maria da Silva\nZona: 123 / Seção: 045", delayMs: 500, backstageKeys: ["crm-format"] },
+      { id: "c-6", type: "text", from: "agent", content: "Posso confirmar o cadastro dela na sua base de Lagarto?", delayMs: 500, backstageKeys: ["human-error-reduction"] },
       { id: "c-7", type: "text", from: "user", content: "Pode sim.", delayMs: 450 },
       { id: "c-8", type: "typing", from: "agent", delayMs: 350 },
       { id: "c-9", type: "text", from: "agent", content: "Fechado! Cadastro atualizado. ✅", delayMs: 450 },
@@ -295,29 +246,11 @@ const scenarios: Scenario[] = [
       { id: "l-3", type: "text", from: "agent", content: "Show! Qual o modelo e cor? 🚗", delayMs: 500 },
       { id: "l-4", type: "text", from: "user", content: "É um Gol Prata.", delayMs: 550 },
       { id: "l-5", type: "typing", from: "agent", delayMs: 450, backstageKeys: ["resource-logistics"] },
-      {
-        id: "l-6",
-        type: "text",
-        from: "agent",
-        content: "Anotado. Você prefere o adesivo do vidro traseiro todo (perfurado) ou só o lateral?",
-        delayMs: 650,
-      },
+      { id: "l-6", type: "text", from: "agent", content: "Anotado. Você prefere o adesivo do vidro traseiro todo (perfurado) ou só o lateral?", delayMs: 650 },
       { id: "l-7", type: "text", from: "user", content: "O vidro todo.", delayMs: 500 },
       { id: "l-8", type: "typing", from: "agent", delayMs: 400, backstageKeys: ["event-scheduling"] },
-      {
-        id: "l-9",
-        type: "text",
-        from: "agent",
-        content: "Perfeito. Sábado teremos um Pit Stop na Praça da Matriz. Te aviso o horário!",
-        delayMs: 650,
-      },
-      {
-        id: "l-10",
-        type: "image",
-        from: "agent",
-        meta: { title: "Logística e Frota", src: "/campanha-frota.png" },
-        delayMs: 650,
-      },
+      { id: "l-9", type: "text", from: "agent", content: "Perfeito. Sábado teremos um Pit Stop na Praça da Matriz. Te aviso o horário!", delayMs: 650 },
+      { id: "l-10", type: "image", from: "agent", meta: { title: "Logística e Frota", src: "/campanha-frota.png" }, delayMs: 650 },
     ],
   },
   {
@@ -334,166 +267,95 @@ const scenarios: Scenario[] = [
     steps: [
       { id: "g-1", type: "typing", from: "agent", delayMs: 500, backstageKeys: ["inactivity-trigger"] },
       { id: "g-2", type: "text", from: "agent", content: "E aí, Carlos! 👋", delayMs: 450 },
-      {
-        id: "g-3",
-        type: "text",
-        from: "agent",
-        content: "Vi que faltam só 2 cadastros para você bater a meta da semana e ganhar +500 XP.",
-        delayMs: 650,
-        backstageKeys: ["gamification-progress"],
-      },
-      {
-        id: "g-4",
-        type: "text",
-        from: "agent",
-        content: "Conseguiu falar com aquele seu vizinho que estava indeciso?",
-        delayMs: 600,
-      },
+      { id: "g-3", type: "text", from: "agent", content: "Vi que faltam só 2 cadastros para você bater a meta da semana e ganhar +500 XP.", delayMs: 650, backstageKeys: ["gamification-progress"] },
+      { id: "g-4", type: "text", from: "agent", content: "Conseguiu falar com aquele seu vizinho que estava indeciso?", delayMs: 600 },
       { id: "g-5", type: "text", from: "user", content: "Falei sim, ele garantiu o voto!", delayMs: 550 },
       { id: "g-6", type: "typing", from: "agent", delayMs: 400, backstageKeys: ["crm-update"] },
       { id: "g-7", type: "text", from: "agent", content: "Excelente! Já atualizei aqui. 🚀 Falta só 1 agora!", delayMs: 600 },
-      {
-        id: "g-8",
-        type: "image",
-        from: "agent",
-        meta: { title: "Gamificação e Metas", src: "/gamificacao-metas.png" },
-        delayMs: 650,
-      },
+      { id: "g-8", type: "image", from: "agent", meta: { title: "Gamificação e Metas", src: "/gamificacao-metas.png" }, delayMs: 650 },
     ],
   },
 ];
 
 // -----------------------------
-// 3) Store + Playback
+// 4) Reducer State
 // -----------------------------
 type Status = "idle" | "playing" | "paused" | "finished";
 
 type SimState = {
   selectedScenarioId: ScenarioId;
   status: Status;
-  cursor: number;
+  cursor: number; // quantos steps já estão visíveis
   speed: 1 | 1.5 | 2;
-  blocked: boolean;
-
-  setScenario: (id: ScenarioId) => void;
-  play: () => void;
-  pause: () => void;
-  replay: () => void;
-  setSpeed: (s: 1 | 1.5 | 2) => void;
-
-  advance: () => void;
-  resolveBlockAndContinue: () => void;
-
-  getScenario: () => Scenario;
-  getSteps: () => Step[];
-  getVisibleSteps: () => Step[];
-  getActiveKeys: () => Set<BackstageKey>;
+  blocked: boolean; // bloqueia autoplay quando o step exibido é button com blockUntilAction
 };
 
-const useSim = create<SimState>((set, get) => ({
+type Action =
+  | { type: "SET_SCENARIO"; id: ScenarioId }
+  | { type: "PLAY" }
+  | { type: "PAUSE" }
+  | { type: "REPLAY" }
+  | { type: "SET_SPEED"; speed: 1 | 1.5 | 2 }
+  | { type: "ADVANCE"; stepsLen: number; nextStepIsBlocking: boolean }
+  | { type: "RESOLVE_BLOCK" };
+
+const initialState: SimState = {
   selectedScenarioId: "onboarding",
   status: "idle",
   cursor: 0,
   speed: 1,
   blocked: false,
+};
 
-  setScenario: (id) => set({ selectedScenarioId: id, status: "idle", cursor: 0, blocked: false }),
-
-  play: () => set({ status: "playing" }),
-  pause: () => set({ status: "paused" }),
-  replay: () => set({ status: "playing", cursor: 0, blocked: false }),
-  setSpeed: (s) => set({ speed: s }),
-
-  getScenario: () => scenarios.find((x) => x.id === get().selectedScenarioId)!,
-  getSteps: () => get().getScenario().steps,
-  getVisibleSteps: () => get().getSteps().slice(0, get().cursor),
-
-  getActiveKeys: () => {
-    const keys = new Set<BackstageKey>();
-    get().getVisibleSteps().forEach((st) => st.backstageKeys?.forEach((k) => keys.add(k)));
-    return keys;
-  },
-
-  advance: () => {
-    const { cursor } = get();
-    const all = get().getSteps();
-    if (cursor >= all.length) {
-      set({ status: "finished" });
-      return;
+function reducer(state: SimState, action: Action): SimState {
+  switch (action.type) {
+    case "SET_SCENARIO":
+      return { ...state, selectedScenarioId: action.id, status: "idle", cursor: 0, blocked: false };
+    case "PLAY":
+      return { ...state, status: state.status === "finished" ? "finished" : "playing" };
+    case "PAUSE":
+      return { ...state, status: "paused" };
+    case "REPLAY":
+      return { ...state, status: "playing", cursor: 0, blocked: false };
+    case "SET_SPEED":
+      return { ...state, speed: action.speed };
+    case "ADVANCE": {
+      const nextCursor = Math.min(state.cursor + 1, action.stepsLen);
+      const finished = nextCursor >= action.stepsLen;
+      return {
+        ...state,
+        cursor: nextCursor,
+        blocked: action.nextStepIsBlocking ? true : state.blocked,
+        status: finished ? "finished" : state.status,
+      };
     }
-
-    const next = all[cursor];
-    const nextCursor = cursor + 1;
-    const shouldBlock = next.type === "button" && next.blockUntilAction;
-
-    set({
-      cursor: nextCursor,
-      blocked: shouldBlock ? true : get().blocked,
-      status: nextCursor >= all.length ? "finished" : get().status,
-    });
-  },
-
-  resolveBlockAndContinue: () => {
-    // Unblock, then immediately advance to show next step (often the user's confirmation)
-    set({ blocked: false });
-    get().advance();
-    set({ status: "playing" });
-  },
-}));
-
-function usePlayback() {
-  const timerRef = useRef<number | null>(null);
-
-  const status = useSim((s) => s.status);
-  const speed = useSim((s) => s.speed);
-  const blocked = useSim((s) => s.blocked);
-  const cursor = useSim((s) => s.cursor);
-  const getSteps = useSim((s) => s.getSteps);
-  const advance = useSim((s) => s.advance);
-
-  useEffect(() => {
-    if (timerRef.current) window.clearTimeout(timerRef.current);
-
-    if (status !== "playing") return;
-    if (blocked) return;
-
-    const steps = getSteps();
-    if (cursor >= steps.length) return;
-
-    const next = steps[cursor];
-    const delay = (next.delayMs ?? 0) / speed;
-
-    timerRef.current = window.setTimeout(() => {
-      advance();
-    }, Math.max(0, delay));
-
-    return () => {
-      if (timerRef.current) window.clearTimeout(timerRef.current);
-    };
-  }, [status, speed, blocked, cursor, getSteps, advance]);
+    case "RESOLVE_BLOCK":
+      return { ...state, blocked: false, status: "playing" };
+    default:
+      return state;
+  }
 }
 
 // -----------------------------
-// 4) UI Helpers
+// 5) UI Components
 // -----------------------------
-function cn(...classes: Array<string | false | undefined | null>) {
-  return classes.filter(Boolean).join(" ");
+function TypingDots() {
+  return (
+    <div className="flex items-center gap-1.5">
+      <span className="h-2 w-2 rounded-full bg-white/60 animate-bounce [animation-delay:-0.2s]" />
+      <span className="h-2 w-2 rounded-full bg-white/60 animate-bounce [animation-delay:-0.1s]" />
+      <span className="h-2 w-2 rounded-full bg-white/60 animate-bounce" />
+    </div>
+  );
 }
 
-function formatSeconds(s: number) {
-  const m = Math.floor(s / 60);
-  const r = s % 60;
-  return `${m}:${String(r).padStart(2, "0")}`;
-}
-
-// -----------------------------
-// 5) Components (in-file)
-// -----------------------------
-function ScenarioMenu() {
-  const selected = useSim((s) => s.selectedScenarioId);
-  const setScenario = useSim((s) => s.setScenario);
-  const replay = useSim((s) => s.replay);
-
+function ScenarioMenu({
+  selected,
+  onSelect,
+}: {
+  selected: ScenarioId;
+  onSelect: (id: ScenarioId) => void;
+}) {
   return (
     <Card className="bg-zinc-950/40 border-zinc-800 p-3">
       <div className="flex items-center justify-between px-1 pb-2">
@@ -509,10 +371,7 @@ function ScenarioMenu() {
           return (
             <button
               key={sc.id}
-              onClick={() => {
-                setScenario(sc.id);
-                replay();
-              }}
+              onClick={() => onSelect(sc.id)}
               className={cn(
                 "w-full text-left rounded-lg border px-3 py-3 transition",
                 is
@@ -535,14 +394,21 @@ function ScenarioMenu() {
   );
 }
 
-function PlayerControls() {
-  const status = useSim((s) => s.status);
-  const speed = useSim((s) => s.speed);
-  const play = useSim((s) => s.play);
-  const pause = useSim((s) => s.pause);
-  const replay = useSim((s) => s.replay);
-  const setSpeed = useSim((s) => s.setSpeed);
-
+function PlayerControls({
+  status,
+  speed,
+  onPlay,
+  onPause,
+  onReplay,
+  onSpeed,
+}: {
+  status: Status;
+  speed: 1 | 1.5 | 2;
+  onPlay: () => void;
+  onPause: () => void;
+  onReplay: () => void;
+  onSpeed: (s: 1 | 1.5 | 2) => void;
+}) {
   const isPlaying = status === "playing";
 
   return (
@@ -551,7 +417,7 @@ function PlayerControls() {
         <Button
           size="sm"
           variant={isPlaying ? "secondary" : "default"}
-          onClick={() => (isPlaying ? pause() : play())}
+          onClick={() => (isPlaying ? onPause() : onPlay())}
           className={cn(
             "border",
             isPlaying ? "bg-zinc-900 border-zinc-800 text-zinc-100" : "bg-white text-zinc-900 border-white"
@@ -564,7 +430,7 @@ function PlayerControls() {
         <Button
           size="sm"
           variant="secondary"
-          onClick={replay}
+          onClick={onReplay}
           className="bg-zinc-900 border border-zinc-800 text-zinc-100"
         >
           <RotateCcw className="h-4 w-4 mr-2" />
@@ -579,7 +445,7 @@ function PlayerControls() {
             key={v}
             size="sm"
             variant="secondary"
-            onClick={() => setSpeed(v as 1 | 1.5 | 2)}
+            onClick={() => onSpeed(v as 1 | 1.5 | 2)}
             className={cn(
               "bg-zinc-900 border border-zinc-800 text-zinc-100",
               speed === v && "ring-1 ring-white/30"
@@ -593,169 +459,16 @@ function PlayerControls() {
   );
 }
 
-function PhoneStage({ steps }: { steps: Step[] }) {
-  const blocked = useSim((s) => s.blocked);
-  const resolveBlockAndContinue = useSim((s) => s.resolveBlockAndContinue);
-
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [steps.length]);
-
-  const currentScenario = useSim((s) => s.getScenario());
-
-  // Find last visible button step (if any) and check if it's blocking
-  const lastStep = steps[steps.length - 1];
-  const showBlockHint = blocked && lastStep?.type === "button";
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="text-lg font-semibold text-zinc-100">Cérebro do WhatsApp</div>
-          <div className="text-sm text-zinc-400">{currentScenario.title}</div>
-        </div>
-        <div className="hidden md:block">
-          <PlayerControls />
-        </div>
-      </div>
-
-      <Card className="bg-zinc-950/40 border-zinc-800 p-4">
-        {/* Phone mock */}
-        <div className="mx-auto max-w-[420px]">
-          <div className="rounded-[32px] border border-zinc-800 bg-zinc-950 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_25px_80px_rgba(0,0,0,0.55)] overflow-hidden">
-            {/* Top bar */}
-            <div className="px-4 py-3 border-b border-zinc-900 bg-zinc-950/80">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-sm font-semibold text-zinc-100">
-                    GovMesh Assist <span className="text-green-400">✅</span>
-                  </div>
-                  <div className="text-xs text-zinc-400">Conta Comercial Oficial</div>
-                </div>
-                <Badge className="bg-zinc-900 border border-zinc-800 text-zinc-200">Online</Badge>
-              </div>
-            </div>
-
-            {/* Chat */}
-            <div className="h-[520px] bg-[radial-gradient(ellipse_at_top,rgba(34,197,94,0.10),transparent_50%),radial-gradient(ellipse_at_bottom,rgba(255,255,255,0.03),transparent_55%)]">
-              <div ref={scrollRef} className="h-full overflow-y-auto px-3 py-4">
-                <MessageList
-                  steps={steps}
-                  onButtonClick={() => resolveBlockAndContinue()}
-                />
-
-                {showBlockHint && (
-                  <div className="mt-3 flex justify-center">
-                    <div className="text-xs text-zinc-400 bg-zinc-950/70 border border-zinc-800 rounded-full px-3 py-1">
-                      Clique no botão para continuar
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Composer (visual only) */}
-            <div className="px-3 py-3 border-t border-zinc-900 bg-zinc-950/80">
-              <div className="h-10 rounded-full bg-zinc-900/60 border border-zinc-800 flex items-center px-4 text-sm text-zinc-500">
-                Mensagem...
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-3 md:hidden">
-            <PlayerControls />
-          </div>
-        </div>
-      </Card>
-    </div>
-  );
-}
-
-function BackstagePanel() {
-  const scenario = useSim((s) => s.getScenario());
-  const activeKeys = useSim((s) => s.getActiveKeys());
-
-  return (
-    <Card className="bg-zinc-950/40 border-zinc-800 p-4">
-      <div className="flex items-center justify-between">
-        <div className="text-sm font-semibold text-zinc-100">Nos Bastidores</div>
-        <div className="flex items-center gap-2 text-xs text-zinc-400">
-          <Zap className="h-4 w-4 text-green-400" />
-          automação
-        </div>
-      </div>
-
-      <div className="mt-3 text-sm text-zinc-300 leading-relaxed">
-        {scenario.backstageSummary}
-      </div>
-
-      <Separator className="my-4 bg-zinc-900" />
-
-      <div className="text-xs font-semibold text-zinc-200 mb-2">Etapas técnicas</div>
-      <div className="flex flex-wrap gap-2">
-        {scenario.backstageChips.map((chip) => {
-          const on = activeKeys.has(chip.key);
-          return (
-            <span
-              key={chip.key}
-              className={cn(
-                "inline-flex items-center rounded-full border px-2.5 py-1 text-xs transition",
-                on
-                  ? "bg-green-500/10 border-green-500/30 text-green-200"
-                  : "bg-zinc-950/30 border-zinc-800 text-zinc-400"
-              )}
-            >
-              <span className={cn("mr-2 h-1.5 w-1.5 rounded-full", on ? "bg-green-400" : "bg-zinc-600")} />
-              {chip.label}
-            </span>
-          );
-        })}
-      </div>
-
-      <Separator className="my-4 bg-zinc-900" />
-
-      <div className="text-xs text-zinc-500">
-        Dica: use Play, Pause e Velocidade para ver como a IA reage em tempo real.
-      </div>
-    </Card>
-  );
-}
-
-function MessageList({
-  steps,
+function MessageRenderer({
+  step,
   onButtonClick,
 }: {
-  steps: Step[];
+  step: Step;
   onButtonClick: () => void;
 }) {
-  return (
-    <div className="space-y-2">
-      <AnimatePresence initial={false}>
-        {steps.map((st) => (
-          <motion.div
-            key={st.id}
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.22 }}
-          >
-            <MessageRenderer step={st} onButtonClick={onButtonClick} />
-          </motion.div>
-        ))}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-function MessageRenderer({ step, onButtonClick }: { step: Step; onButtonClick: () => void }) {
   const isUser = "from" in step && step.from === "user";
   const align = isUser ? "justify-end" : "justify-start";
-  const bubbleBase =
-    "max-w-[82%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-line";
+  const bubbleBase = "max-w-[82%] rounded-2xl px-3 py-2 text-sm leading-relaxed whitespace-pre-line";
   const bubbleStyle = isUser
     ? "bg-green-500 text-zinc-950"
     : "bg-zinc-900/80 border border-zinc-800 text-zinc-100";
@@ -869,9 +582,7 @@ function MessageRenderer({ step, onButtonClick }: { step: Step; onButtonClick: (
             onClick={onButtonClick}
             className={cn(
               "w-full rounded-xl",
-              isUser
-                ? "bg-zinc-950 text-white hover:bg-zinc-900"
-                : "bg-white text-zinc-900 hover:bg-zinc-100"
+              isUser ? "bg-zinc-950 text-white hover:bg-zinc-900" : "bg-white text-zinc-900 hover:bg-zinc-100"
             )}
           >
             {step.meta.label}
@@ -884,40 +595,220 @@ function MessageRenderer({ step, onButtonClick }: { step: Step; onButtonClick: (
   return null;
 }
 
-function TypingDots() {
+function MessageList({
+  steps,
+  onButtonClick,
+}: {
+  steps: Step[];
+  onButtonClick: () => void;
+}) {
   return (
-    <div className="flex items-center gap-1.5">
-      <span className="h-2 w-2 rounded-full bg-white/60 animate-bounce [animation-delay:-0.2s]" />
-      <span className="h-2 w-2 rounded-full bg-white/60 animate-bounce [animation-delay:-0.1s]" />
-      <span className="h-2 w-2 rounded-full bg-white/60 animate-bounce" />
+    <div className="space-y-2">
+      <AnimatePresence initial={false}>
+        {steps.map((st) => (
+          <motion.div
+            key={st.id}
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.22 }}
+          >
+            <MessageRenderer step={st} onButtonClick={onButtonClick} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
     </div>
   );
 }
 
-// -----------------------------
-// 6) Page
-// -----------------------------
-export default function SimulatorPage() {
-  usePlayback();
-
-  const selectedId = useSim((s) => s.selectedScenarioId);
-  const visibleSteps = useSim((s) => s.getVisibleSteps());
-  const replay = useSim((s) => s.replay);
-  const play = useSim((s) => s.play);
-
-  const scenario = useMemo(() => scenarios.find((x) => x.id === selectedId)!, [selectedId]);
+function PhoneStage({
+  scenarioTitle,
+  steps,
+  blocked,
+  onButtonClick,
+  controls,
+}: {
+  scenarioTitle: string;
+  steps: Step[];
+  blocked: boolean;
+  onButtonClick: () => void;
+  controls: React.ReactNode;
+}) {
+  const scrollRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    // Auto-start on first load
-    replay();
-    play();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [steps.length]);
+
+  const last = steps[steps.length - 1];
+  const showBlockHint = blocked && last?.type === "button";
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-lg font-semibold text-zinc-100">Cérebro do WhatsApp</div>
+          <div className="text-sm text-zinc-400">{scenarioTitle}</div>
+        </div>
+        <div className="hidden md:block">{controls}</div>
+      </div>
+
+      <Card className="bg-zinc-950/40 border-zinc-800 p-4">
+        <div className="mx-auto max-w-[420px]">
+          <div className="rounded-[32px] border border-zinc-800 bg-zinc-950 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_25px_80px_rgba(0,0,0,0.55)] overflow-hidden">
+            <div className="px-4 py-3 border-b border-zinc-900 bg-zinc-950/80">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-zinc-100">
+                    GovMesh Assist <span className="text-green-400">✅</span>
+                  </div>
+                  <div className="text-xs text-zinc-400">Conta Comercial Oficial</div>
+                </div>
+                <Badge className="bg-zinc-900 border border-zinc-800 text-zinc-200">Online</Badge>
+              </div>
+            </div>
+
+            <div className="h-[520px] bg-[radial-gradient(ellipse_at_top,rgba(34,197,94,0.10),transparent_50%),radial-gradient(ellipse_at_bottom,rgba(255,255,255,0.03),transparent_55%)]">
+              <div ref={scrollRef} className="h-full overflow-y-auto px-3 py-4">
+                <MessageList steps={steps} onButtonClick={onButtonClick} />
+
+                {showBlockHint && (
+                  <div className="mt-3 flex justify-center">
+                    <div className="text-xs text-zinc-400 bg-zinc-950/70 border border-zinc-800 rounded-full px-3 py-1">
+                      Clique no botão para continuar
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="px-3 py-3 border-t border-zinc-900 bg-zinc-950/80">
+              <div className="h-10 rounded-full bg-zinc-900/60 border border-zinc-800 flex items-center px-4 text-sm text-zinc-500">
+                Mensagem...
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-3 md:hidden">{controls}</div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
+function BackstagePanel({
+  summary,
+  chips,
+  activeKeys,
+}: {
+  summary: string;
+  chips: { key: BackstageKey; label: string }[];
+  activeKeys: Set<BackstageKey>;
+}) {
+  return (
+    <Card className="bg-zinc-950/40 border-zinc-800 p-4">
+      <div className="flex items-center justify-between">
+        <div className="text-sm font-semibold text-zinc-100">Nos Bastidores</div>
+        <div className="flex items-center gap-2 text-xs text-zinc-400">
+          <Zap className="h-4 w-4 text-green-400" />
+          automação
+        </div>
+      </div>
+
+      <div className="mt-3 text-sm text-zinc-300 leading-relaxed">{summary}</div>
+
+      <Separator className="my-4 bg-zinc-900" />
+
+      <div className="text-xs font-semibold text-zinc-200 mb-2">Etapas técnicas</div>
+      <div className="flex flex-wrap gap-2">
+        {chips.map((chip) => {
+          const on = activeKeys.has(chip.key);
+          return (
+            <span
+              key={chip.key}
+              className={cn(
+                "inline-flex items-center rounded-full border px-2.5 py-1 text-xs transition",
+                on ? "bg-green-500/10 border-green-500/30 text-green-200" : "bg-zinc-950/30 border-zinc-800 text-zinc-400"
+              )}
+            >
+              <span className={cn("mr-2 h-1.5 w-1.5 rounded-full", on ? "bg-green-400" : "bg-zinc-600")} />
+              {chip.label}
+            </span>
+          );
+        })}
+      </div>
+
+      <Separator className="my-4 bg-zinc-900" />
+
+      <div className="text-xs text-zinc-500">Dica: use Play, Pause e Velocidade para ver a IA reagindo.</div>
+    </Card>
+  );
+}
+
+// -----------------------------
+// 6) Page (with playback timer)
+// -----------------------------
+export default function SimulatorPage() {
+  const [state, dispatch] = useReducer(reducer, initialState);
+
+  const scenario = useMemo(
+    () => scenarios.find((x) => x.id === state.selectedScenarioId)!,
+    [state.selectedScenarioId]
+  );
+
+  const steps = scenario.steps;
+  const visibleSteps = useMemo(() => steps.slice(0, state.cursor), [steps, state.cursor]);
+
+  const activeKeys = useMemo(() => {
+    const keys = new Set<BackstageKey>();
+    visibleSteps.forEach((st) => st.backstageKeys?.forEach((k) => keys.add(k)));
+    return keys;
+  }, [visibleSteps]);
+
+  const timerRef = useRef<number | null>(null);
+
+  // Playback engine
+  useEffect(() => {
+    if (timerRef.current) window.clearTimeout(timerRef.current);
+
+    if (state.status !== "playing") return;
+    if (state.blocked) return;
+    if (state.cursor >= steps.length) return;
+
+    const next = steps[state.cursor];
+    const delay = (next.delayMs ?? 0) / state.speed;
+
+    timerRef.current = window.setTimeout(() => {
+      const nextStepIsBlocking = next.type === "button" && !!next.blockUntilAction;
+      dispatch({ type: "ADVANCE", stepsLen: steps.length, nextStepIsBlocking });
+    }, Math.max(0, delay));
+
+    return () => {
+      if (timerRef.current) window.clearTimeout(timerRef.current);
+    };
+  }, [state.status, state.blocked, state.cursor, state.speed, steps]);
+
+  // Auto-start on first load
+  useEffect(() => {
+    dispatch({ type: "REPLAY" });
   }, []);
+
+  const controls = (
+    <PlayerControls
+      status={state.status}
+      speed={state.speed}
+      onPlay={() => dispatch({ type: "PLAY" })}
+      onPause={() => dispatch({ type: "PAUSE" })}
+      onReplay={() => dispatch({ type: "REPLAY" })}
+      onSpeed={(s) => dispatch({ type: "SET_SPEED", speed: s })}
+    />
+  );
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <div className="mx-auto max-w-7xl px-4 py-10">
-        {/* Header */}
         <div className="mb-8">
           <div className="text-2xl font-semibold">Simulador Interativo</div>
           <div className="text-sm text-zinc-400 mt-1">
@@ -925,26 +816,44 @@ export default function SimulatorPage() {
           </div>
         </div>
 
-        {/* Layout */}
         <div className="grid grid-cols-12 gap-6">
           <div className="col-span-12 lg:col-span-3">
-            <ScenarioMenu />
+            <ScenarioMenu
+              selected={state.selectedScenarioId}
+              onSelect={(id) => {
+                dispatch({ type: "SET_SCENARIO", id });
+                dispatch({ type: "REPLAY" });
+              }}
+            />
           </div>
 
           <div className="col-span-12 lg:col-span-6">
-            <PhoneStage steps={visibleSteps} />
+            <PhoneStage
+              scenarioTitle={scenario.title}
+              steps={visibleSteps}
+              blocked={state.blocked}
+              onButtonClick={() => {
+                // Clique resolve bloqueio e avança imediatamente para exibir o próximo step (geralmente confirmação do user)
+                dispatch({ type: "RESOLVE_BLOCK" });
+
+                // Avança 1 step imediatamente para mostrar "Li e concordo." ou próximo
+                const next = steps[state.cursor];
+                if (next) {
+                  const nextStepIsBlocking = next.type === "button" && !!next.blockUntilAction;
+                  dispatch({ type: "ADVANCE", stepsLen: steps.length, nextStepIsBlocking });
+                }
+              }}
+              controls={controls}
+            />
           </div>
 
           <div className="col-span-12 lg:col-span-3 space-y-4">
-            <BackstagePanel />
+            <BackstagePanel summary={scenario.backstageSummary} chips={scenario.backstageChips} activeKeys={activeKeys} />
 
             <Card className="bg-zinc-950/40 border-zinc-800 p-4">
-              <div className="text-sm font-semibold text-zinc-100">Cenário atual</div>
-              <div className="mt-2 text-sm text-zinc-300">{scenario.title}</div>
-              <div className="text-xs text-zinc-400 mt-1">{scenario.subtitle}</div>
-              <Separator className="my-4 bg-zinc-900" />
-              <div className="text-xs text-zinc-500">
-                Assets esperados em <span className="text-zinc-300">/public</span>:
+              <div className="text-sm font-semibold text-zinc-100">Assets em /public</div>
+              <div className="text-xs text-zinc-500 mt-2">
+                Garanta que estes arquivos existam no deploy:
                 <div className="mt-2 grid gap-1">
                   <span className="text-zinc-400">/fake-vs-fato-card.png</span>
                   <span className="text-zinc-400">/titulo-eleitor-ocr.jpg</span>
@@ -952,6 +861,12 @@ export default function SimulatorPage() {
                   <span className="text-zinc-400">/campanha-frota.png</span>
                   <span className="text-zinc-400">/gamificacao-metas.png</span>
                 </div>
+              </div>
+              <Separator className="my-4 bg-zinc-900" />
+              <div className="text-xs text-zinc-500">
+                Estado: <span className="text-zinc-300">{state.status}</span>{" "}
+                • Cursor: <span className="text-zinc-300">{state.cursor}</span> / {steps.length}
+                {state.blocked ? <span className="text-zinc-300"> • aguardando clique</span> : null}
               </div>
             </Card>
           </div>
