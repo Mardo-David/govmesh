@@ -11,19 +11,22 @@ import {
   Sparkles,
   Scale,
   Trophy,
-  Activity,
-  Ear // Ícone novo para Escuta Ativa
+  Activity, // Radar
+  Ear,      // Escuta Ativa
+  Bot       // Simulador (Novo)
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGovMesh } from '@/contexts/GovMeshContext';
 
 const allNavItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/', profiles: ['Admin', 'Jurídico', 'Liderança', 'Apoiador'] },
-  { icon: Activity, label: 'Radar das Redes', path: '/radar', profiles: ['Admin', 'Jurídico', 'Liderança'] },
   
-  // NOVO ITEM
+  // Vitrine de Capacidades (Novos)
+  { icon: Bot, label: 'Simulador WhatsApp', path: '/simulador', profiles: ['Admin', 'Liderança'] },
+  { icon: Activity, label: 'Radar das Redes', path: '/radar', profiles: ['Admin', 'Jurídico', 'Liderança'] },
   { icon: Ear, label: 'Escuta Ativa', path: '/escuta', profiles: ['Admin', 'Liderança', 'Apoiador'] },
 
+  // Operacional
   { icon: FolderKanban, label: 'Kits', path: '/kits', profiles: ['Admin', 'Jurídico', 'Liderança', 'Apoiador'] },
   { icon: Sparkles, label: 'GovMesh Assist', path: '/assist', profiles: ['Admin', 'Jurídico', 'Liderança', 'Apoiador'] },
   { icon: Users, label: 'CRM Mobilização', path: '/crm', profiles: ['Admin', 'Liderança'] },

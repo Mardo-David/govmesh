@@ -21,7 +21,8 @@ import Suporte from "./pages/Suporte";
 import NotFound from "./pages/NotFound";
 import Gamificacao from "./pages/Gamificacao";
 import RadarPage from "./pages/RadarPage";
-import EscutaAtiva from "./pages/EscutaAtiva"; // <--- Import Novo
+import EscutaAtiva from "./pages/EscutaAtiva";
+import SimulatorPage from "./pages/SimulatorPage"; // Nova Página
 
 const queryClient = new QueryClient();
 
@@ -34,15 +35,15 @@ const App = () => (
         <InstallPrompt />
         <BrowserRouter>
           <Routes>
+            {/* Rota Pública */}
             <Route path="/login" element={<Login />} />
             
+            {/* Rotas Protegidas (Com Layout) */}
             <Route element={<AppLayout />}>
               <Route path="/" element={<Dashboard />} />
+              <Route path="/simulador" element={<SimulatorPage />} /> {/* Novo */}
               <Route path="/radar" element={<RadarPage />} />
-              
-              {/* NOVA ROTA */}
               <Route path="/escuta" element={<EscutaAtiva />} />
-              
               <Route path="/kits" element={<Kits />} />
               <Route path="/assist" element={<Assist />} />
               <Route path="/crm" element={<CRM />} />
@@ -54,6 +55,7 @@ const App = () => (
               <Route path="/gamificacao" element={<Gamificacao />} />
             </Route>
 
+            {/* Rota 404 */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
