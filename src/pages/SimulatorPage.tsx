@@ -230,7 +230,7 @@ const MessageBubble = ({ step, onButtonClick }: { step: Step, onButtonClick: () 
 
 export default function SimulatorPage() {
   const [activeScenarioId, setActiveScenarioId] = useState(SCENARIOS[0].id);
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true); // <--- MUDANÇA: Auto-play ativo por padrão
   const [cursor, setCursor] = useState(0); // Qual passo estamos
   const [speed, setSpeed] = useState(1);
   const [activeBackstageKeys, setActiveBackstageKeys] = useState<Set<string>>(new Set());
@@ -242,7 +242,7 @@ export default function SimulatorPage() {
 
   // Reset ao trocar cenário
   useEffect(() => {
-    setIsPlaying(false);
+    setIsPlaying(true); // <--- MUDANÇA: Auto-play ao trocar cenário
     setCursor(0);
     setActiveBackstageKeys(new Set());
   }, [activeScenarioId]);
