@@ -9,7 +9,7 @@ import {
   Share2, 
   MapPin, 
   Zap,
-  ArrowRight,
+  ArrowRight, 
   ShieldAlert,
   ThumbsDown,
   Maximize2,
@@ -29,15 +29,13 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
-// --- CONFIGURAÇÃO DE CORES SEMÂNTICAS (REGRA DE OURO) ---
 const COLORS = {
-  danger: '#FF3B30',  // Crise / Ataque
-  success: '#34C759', // Vitória / Entrega
-  info:    '#007AFF', // Institucional
-  warning: '#FFCC00', // Atenção / WhatsApp
+  danger: '#FF3B30',
+  success: '#34C759',
+  info:    '#007AFF',
+  warning: '#FFCC00',
 };
 
-// --- MOCK DATA TROPICALIZADO (SERGIPE) ---
 const narratives = [
   { id: 1, topic: 'Falta de Médicos (HUSE)', sentiment: 'danger', volume: 85, trend: 'up' },
   { id: 2, topic: 'Nova Ponte Aracaju-Barra', sentiment: 'success', volume: 60, trend: 'up' },
@@ -52,7 +50,7 @@ const feedAlerts = [
     network: 'Instagram', 
     user: '@influencer_aracaju', 
     summary: 'Vídeo viralizando sobre buracos na Zona Norte. Tom de denúncia forte.',
-    risk: 'danger', // Crise
+    risk: 'danger',
     viralScore: 92,
     time: '15 min atrás',
     relatedWa: 45
@@ -62,7 +60,7 @@ const feedAlerts = [
     network: 'WhatsApp', 
     user: 'Grupos do Agreste', 
     summary: 'Áudio de liderança reclamando de promessa não cumprida em Itabaiana.',
-    risk: 'warning', // Atenção
+    risk: 'warning',
     viralScore: 88,
     time: '32 min atrás',
     relatedWa: 120
@@ -72,7 +70,7 @@ const feedAlerts = [
     network: 'Portal de Notícias', 
     user: 'Sergipe Hoje', 
     summary: 'Matéria elogiando a organização do evento de ontem.',
-    risk: 'success', // Vitória
+    risk: 'success',
     viralScore: 65,
     time: '1h atrás',
     relatedWa: 12
@@ -100,7 +98,6 @@ export default function RadarPage() {
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
-      {/* Header & Filters */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
@@ -120,9 +117,7 @@ export default function RadarPage() {
         </div>
       </div>
 
-      {/* 1. TOP: KPIs de Temperatura */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Sentimento Geral - CRÍTICO */}
         <div className="glass-card p-4 rounded-xl border-l-4" style={{ borderLeftColor: COLORS.danger }}>
           <div className="flex justify-between items-start">
             <span className="text-xs font-bold text-muted-foreground uppercase">Sentimento Geral</span>
@@ -136,7 +131,6 @@ export default function RadarPage() {
           <p className="text-xs text-muted-foreground mt-2">Alerta: +5% vs ontem</p>
         </div>
 
-        {/* Volume - INFO */}
         <div className="glass-card p-4 rounded-xl border-l-4" style={{ borderLeftColor: COLORS.info }}>
           <div className="flex justify-between items-start">
             <span className="text-xs font-bold text-muted-foreground uppercase">Volume de Menções</span>
@@ -151,7 +145,6 @@ export default function RadarPage() {
           <p className="text-xs text-muted-foreground mt-3">Pico às 19:00 (Grande Aracaju)</p>
         </div>
 
-        {/* Share of Voice */}
         <div className="glass-card p-4 rounded-xl border-l-4 border-l-gray-500">
           <div className="flex justify-between items-start">
             <span className="text-xs font-bold text-muted-foreground uppercase">Share of Voice</span>
@@ -172,7 +165,6 @@ export default function RadarPage() {
           </div>
         </div>
 
-        {/* Ataques Detectados - PERIGO IMEDIATO */}
         <div className="glass-card p-4 rounded-xl border-l-4 bg-red-500/5 animate-pulse-slow" style={{ borderLeftColor: COLORS.danger }}>
           <div className="flex justify-between items-start">
             <span className="text-xs font-bold uppercase" style={{ color: COLORS.danger }}>Ataques Detectados</span>
@@ -188,10 +180,7 @@ export default function RadarPage() {
         </div>
       </div>
 
-      {/* --- MAIN DASHBOARD GRID --- */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
-        
-        {/* COL 1: Nuvem de Narrativas (3 cols) */}
         <div className="lg:col-span-3 space-y-4">
           <div className="glass-card p-4 rounded-xl border-border/50 h-full">
             <h3 className="text-sm font-bold text-muted-foreground uppercase mb-4 flex items-center gap-2">
@@ -199,7 +188,6 @@ export default function RadarPage() {
             </h3>
             <div className="flex flex-wrap gap-2 content-start">
               {narratives.map((item) => {
-                // Lógica de Cores da Nuvem
                 let colorClass = '';
                 let borderClass = '';
                 let textClass = '';
@@ -245,7 +233,6 @@ export default function RadarPage() {
           </div>
         </div>
 
-        {/* COL 2: Feed de Alertas (5 cols) */}
         <div className="lg:col-span-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-muted-foreground uppercase">Feed de Combate</h3>
@@ -260,7 +247,6 @@ export default function RadarPage() {
                     <Badge variant="secondary" className="text-[10px] h-5">{alert.network}</Badge>
                     <span className="text-xs text-muted-foreground font-mono">{alert.time}</span>
                   </div>
-                  {/* TAGS DE SEVERIDADE */}
                   {alert.risk === 'danger' && (
                     <Badge className="text-[10px] gap-1 text-white border-none" style={{ backgroundColor: COLORS.danger }}>
                       <AlertTriangle className="w-3 h-3" /> CRISE
@@ -322,9 +308,9 @@ export default function RadarPage() {
           </div>
         </div>
 
-        {/* COL 3: MAPA TÁTICO SERGIPE (O "Midnight Commander") */}
+        {/* MAPA TÁTICO SERGIPE - V2 COM SVG DO ESTADO */}
         <div className="lg:col-span-4 flex flex-col h-full">
-          <div className="glass-card rounded-xl border-border/50 flex-1 overflow-hidden relative flex flex-col">
+          <div className="glass-card rounded-xl border-border/50 flex-1 overflow-hidden relative flex flex-col bg-[#0f172a]">
             <div className="p-4 border-b border-border/50 bg-secondary/20 z-10">
               <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                 <MapPin className="w-4 h-4" style={{ color: COLORS.info }} /> 
@@ -333,91 +319,78 @@ export default function RadarPage() {
               <p className="text-xs text-muted-foreground">Cruzamento: Redes (Azul) vs. Zap (Amarelo)</p>
             </div>
 
-            {/* MAP CONTAINER - Estilo "Midnight Commander" */}
-            <div className="flex-1 bg-[#020617] relative overflow-hidden">
-              {/* Malha de Fundo Sutil */}
+            {/* MAP CONTAINER */}
+            <div className="flex-1 relative w-full h-full flex items-center justify-center p-6">
+              {/* Background Grid */}
               <div className="absolute inset-0 opacity-10" 
-                style={{ backgroundImage: 'radial-gradient(#1e293b 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
+                style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
               />
               
-              {/* SILHUETA SIMULADA DE SERGIPE (Abstrata para não quebrar sem SVG) */}
-              {/* Usamos um container centralizado para representar o estado */}
-              <div className="absolute inset-8 border border-white/5 rounded-[40px] opacity-50 pointer-events-none">
-                 <span className="absolute bottom-2 right-4 text-[100px] font-black text-white/5 select-none">SE</span>
-              </div>
+              {/* SVG DO ESTADO DE SERGIPE (SIMULADO) */}
+              <div className="relative w-full max-w-[300px] aspect-[3/4]">
+                {/* Contorno do Mapa */}
+                <svg viewBox="0 0 100 130" className="w-full h-full drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+                  {/* Shape de Sergipe (Aproximado) */}
+                  <path 
+                    d="M 20 10 L 60 5 L 80 20 L 90 60 L 70 110 L 30 120 L 10 80 L 20 10 Z" 
+                    fill="#1e293b" 
+                    stroke="#475569" 
+                    strokeWidth="1"
+                    className="opacity-80"
+                  />
+                  {/* Rios ou Divisas internas (Opcional, decorativo) */}
+                  <path d="M 60 5 L 65 30 L 90 60" fill="none" stroke="#334155" strokeWidth="0.5" />
+                </svg>
 
-              {/* --- PONTOS ESTRATÉGICOS (Posicionamento Relativo Aproximado) --- */}
+                {/* --- PONTOS NO MAPA (Posicionados sobre o SVG) --- */}
 
-              {/* 1. PROPRIÁ (Norte) */}
-              <div className="absolute top-[15%] left-[50%] -translate-x-1/2 group cursor-pointer">
-                <div className="flex flex-col items-center">
-                   <MapPin className="w-5 h-5 mb-1 animate-bounce" style={{ color: COLORS.warning }} />
-                   <span className="text-[10px] font-bold text-white/70 bg-black/50 px-1 rounded">Propriá</span>
+                {/* 1. Propriá (Norte/Rio) */}
+                <div className="absolute top-[5%] right-[30%] group">
+                  <div className="w-2 h-2 rounded-full animate-pulse bg-yellow-500 shadow-[0_0_8px_#EAB308]" />
+                  <span className="text-[9px] text-white/60 absolute top-3 -left-2">Propriá</span>
                 </div>
-                <div className="absolute top-8 left-1/2 -translate-x-1/2 bg-black/90 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-20 border border-yellow-500/30">
-                  Baixo São Francisco: 12 Grupos ativos
-                </div>
-              </div>
 
-              {/* 2. ITABAIANA (Agreste / Centro-Oeste) */}
-              <div className="absolute top-[45%] left-[30%] group cursor-pointer">
-                <div className="flex flex-col items-center">
-                    {/* Pin Amarelo Pulsante (Zap) */}
-                   <div className="relative">
-                     <div className="absolute inset-0 rounded-full animate-ping opacity-75" style={{ backgroundColor: COLORS.warning }}></div>
-                     <div className="w-3 h-3 rounded-full relative z-10 border border-black" style={{ backgroundColor: COLORS.warning }}></div>
-                   </div>
-                   <span className="text-[10px] font-bold text-white/70 mt-2 bg-black/50 px-1 rounded">Itabaiana</span>
+                {/* 2. Itabaiana (Agreste) */}
+                <div className="absolute top-[45%] left-[30%] group">
+                  <div className="w-3 h-3 rounded-full bg-yellow-500 border-2 border-black/50 shadow-[0_0_10px_#EAB308] animate-ping absolute opacity-30" />
+                  <div className="w-2 h-2 rounded-full bg-yellow-500 relative z-10" />
+                  <span className="text-[9px] text-white/80 font-bold absolute top-3 -left-4 bg-black/40 px-1 rounded">Itabaiana</span>
                 </div>
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 bg-black/90 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-20 border border-yellow-500/30">
-                  ⚠️ Agreste: Reclamações sobre obras (Zap)
-                </div>
-              </div>
 
-              {/* 3. GRANDE ARACAJU (Leste / Costa) - A "Mancha Azul" */}
-              <div className="absolute top-[55%] right-[20%] group cursor-pointer">
-                {/* Mancha Azul (Redes Sociais) */}
-                <div className="absolute -inset-8 bg-blue-500/30 rounded-full blur-2xl animate-pulse pointer-events-none"></div>
-                <div className="relative flex flex-col items-center">
-                   <div className="w-4 h-4 rounded-full border-2 border-white shadow-[0_0_15px_rgba(0,122,255,0.8)]" style={{ backgroundColor: COLORS.info }}></div>
-                   <span className="text-xs font-bold text-white mt-1 drop-shadow-md">ARACAJU</span>
+                {/* 3. ARACAJU (Leste/Costa) - MANCHA AZUL */}
+                <div className="absolute top-[55%] right-[5%] group">
+                   {/* Aura de calor */}
+                   <div className="w-12 h-12 -top-4 -left-4 rounded-full bg-blue-500/20 blur-xl absolute animate-pulse" />
+                   <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-[0_0_15px_#3B82F6]" />
+                   <span className="text-[10px] text-white font-bold absolute top-4 -left-3 drop-shadow-md">ARACAJU</span>
                 </div>
-                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/90 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-20 border border-blue-500/30">
-                  🔥 Capital: Twitter/Insta fervendo (Crise)
-                </div>
-              </div>
 
-              {/* 4. LAGARTO (Centro-Sul) */}
-              <div className="absolute bottom-[25%] left-[40%] group cursor-pointer">
-                <div className="flex flex-col items-center">
-                   <div className="w-2 h-2 rounded-full bg-gray-500"></div>
-                   <span className="text-[10px] font-bold text-white/50 mt-1">Lagarto</span>
+                {/* 4. Lagarto (Centro-Sul) */}
+                <div className="absolute bottom-[20%] left-[35%] group">
+                  <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                  <span className="text-[9px] text-white/50 absolute top-2 -left-2">Lagarto</span>
                 </div>
-                 <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-black/90 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity z-20">
-                  Sul: Situação Estável
-                </div>
-              </div>
 
-              {/* Legenda do Mapa */}
-              <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-md p-3 rounded-lg border border-white/10">
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full shadow-[0_0_5px_#007AFF]" style={{ backgroundColor: COLORS.info }} />
-                    <span className="text-gray-300">Redes (Capital)</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full shadow-[0_0_5px_#FFCC00]" style={{ backgroundColor: COLORS.warning }} />
-                    <span className="text-gray-300">Zap (Interior)</span>
-                  </div>
-                </div>
               </div>
             </div>
+
+            {/* LEGENDA */}
+            <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-sm p-2 rounded border border-white/5 flex justify-between px-4">
+               <div className="flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_5px_#3B82F6]" />
+                 <span className="text-[10px] text-gray-300">Capital (Redes)</span>
+               </div>
+               <div className="flex items-center gap-2">
+                 <div className="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_5px_#EAB308]" />
+                 <span className="text-[10px] text-gray-300">Interior (Zap)</span>
+               </div>
+            </div>
+
           </div>
         </div>
 
       </div>
 
-      {/* Modal de Contra-Ataque */}
       <Dialog open={isCounterAttackOpen} onOpenChange={setIsCounterAttackOpen}>
         <DialogContent className="bg-card border-border max-w-lg">
           <DialogHeader>
