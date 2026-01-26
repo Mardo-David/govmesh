@@ -30,12 +30,15 @@ import {
 } from '@/components/ui/dialog';
 
 const COLORS = {
-  danger: '#FF3B30',
-  success: '#34C759',
-  info:    '#007AFF',
-  warning: '#FFCC00',
+  danger: '#ef4444', // Vermelho mais vibrante (Tailwind red-500)
+  success: '#22c55e', // Verde (green-500)
+  info:    '#3b82f6', // Azul (blue-500)
+  warning: '#eab308', // Amarelo (yellow-500)
+  darkMap: '#111111', // Fundo Mapbox
+  landMap: '#1e1e1e', // Terra Mapbox
 };
 
+// Mock Data
 const narratives = [
   { id: 1, topic: 'Falta de Médicos (HUSE)', sentiment: 'danger', volume: 85, trend: 'up' },
   { id: 2, topic: 'Nova Ponte Aracaju-Barra', sentiment: 'success', volume: 60, trend: 'up' },
@@ -91,17 +94,18 @@ export default function RadarPage() {
     setIsCounterAttackOpen(false);
     toast.success('Protocolo Disparado!', {
       description: `Kit enviado para ${activeAlert.relatedWa} líderes nas regiões afetadas.`,
-      icon: <Zap className="w-5 h-5" style={{ color: COLORS.warning }} />,
+      icon: <Zap className="w-5 h-5 text-yellow-500" />,
       duration: 5000,
     });
   };
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
+      {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-            <Activity className="w-6 h-6" style={{ color: COLORS.info }} />
+            <Activity className="w-6 h-6 text-blue-500" />
             Radar das Redes
           </h1>
           <p className="text-muted-foreground">Monitoramento Estratégico e Defesa Digital</p>
@@ -117,24 +121,25 @@ export default function RadarPage() {
         </div>
       </div>
 
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="glass-card p-4 rounded-xl border-l-4" style={{ borderLeftColor: COLORS.danger }}>
+        <div className="glass-card p-4 rounded-xl border-l-4 border-l-red-500">
           <div className="flex justify-between items-start">
             <span className="text-xs font-bold text-muted-foreground uppercase">Sentimento Geral</span>
-            <ThumbsDown className="w-4 h-4" style={{ color: COLORS.danger }} />
+            <ThumbsDown className="w-4 h-4 text-red-500" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black" style={{ color: COLORS.danger }}>35%</span>
-            <span className="text-xs font-medium opacity-80" style={{ color: COLORS.danger }}>Negativo</span>
+            <span className="text-2xl font-black text-red-500">35%</span>
+            <span className="text-xs font-medium text-red-400">Negativo</span>
           </div>
-          <Progress value={35} className="h-1.5 mt-3 bg-red-900/20 [&>div]:bg-[#FF3B30]" />
+          <Progress value={35} className="h-1.5 mt-3 bg-red-500/20 [&>div]:bg-red-500" />
           <p className="text-xs text-muted-foreground mt-2">Alerta: +5% vs ontem</p>
         </div>
 
-        <div className="glass-card p-4 rounded-xl border-l-4" style={{ borderLeftColor: COLORS.info }}>
+        <div className="glass-card p-4 rounded-xl border-l-4 border-l-blue-500">
           <div className="flex justify-between items-start">
             <span className="text-xs font-bold text-muted-foreground uppercase">Volume de Menções</span>
-            <MessageCircle className="w-4 h-4" style={{ color: COLORS.info }} />
+            <MessageCircle className="w-4 h-4 text-blue-500" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-black text-foreground">12.4k</span>
@@ -165,65 +170,48 @@ export default function RadarPage() {
           </div>
         </div>
 
-        <div className="glass-card p-4 rounded-xl border-l-4 bg-red-500/5 animate-pulse-slow" style={{ borderLeftColor: COLORS.danger }}>
+        <div className="glass-card p-4 rounded-xl border-l-4 border-l-red-500 bg-red-500/5 animate-pulse-slow">
           <div className="flex justify-between items-start">
-            <span className="text-xs font-bold uppercase" style={{ color: COLORS.danger }}>Ataques Detectados</span>
-            <ShieldAlert className="w-4 h-4" style={{ color: COLORS.danger }} />
+            <span className="text-xs font-bold text-red-500 uppercase">Ataques Detectados</span>
+            <ShieldAlert className="w-4 h-4 text-red-500" />
           </div>
           <div className="mt-2 flex items-baseline gap-2">
-            <span className="text-2xl font-black" style={{ color: COLORS.danger }}>3</span>
-            <span className="text-xs font-medium opacity-80" style={{ color: COLORS.danger }}>Em viralização</span>
+            <span className="text-2xl font-black text-red-500">3</span>
+            <span className="text-xs font-medium text-red-400">Em viralização</span>
           </div>
-          <Button size="sm" className="w-full mt-3 h-7 text-xs bg-[#FF3B30] hover:bg-[#D73027] text-white border-none">
+          <Button size="sm" variant="destructive" className="w-full mt-3 h-7 text-xs">
             Ver War Room
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
+        {/* Temas Quentes */}
         <div className="lg:col-span-3 space-y-4">
           <div className="glass-card p-4 rounded-xl border-border/50 h-full">
             <h3 className="text-sm font-bold text-muted-foreground uppercase mb-4 flex items-center gap-2">
               <Search className="w-4 h-4" /> Temas Quentes
             </h3>
             <div className="flex flex-wrap gap-2 content-start">
-              {narratives.map((item) => {
-                let colorClass = '';
-                let borderClass = '';
-                let textClass = '';
-                
-                if (item.sentiment === 'danger') {
-                  colorClass = 'bg-[#FF3B30]/10 hover:bg-[#FF3B30]/20';
-                  borderClass = 'border-[#FF3B30]/30';
-                  textClass = 'text-[#FF3B30]';
-                } else if (item.sentiment === 'success') {
-                  colorClass = 'bg-[#34C759]/10 hover:bg-[#34C759]/20';
-                  borderClass = 'border-[#34C759]/30';
-                  textClass = 'text-[#34C759]';
-                } else {
-                  colorClass = 'bg-[#007AFF]/10 hover:bg-[#007AFF]/20';
-                  borderClass = 'border-[#007AFF]/30';
-                  textClass = 'text-[#007AFF]';
-                }
-
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setSelectedNarrative(item.id === selectedNarrative ? null : item.id)}
-                    className={`
-                      px-3 py-2 rounded-full text-xs font-bold transition-all duration-300 border ${colorClass} ${borderClass} ${textClass}
-                      ${selectedNarrative === item.id ? 'ring-2 ring-offset-2 ring-offset-background' : ''}
-                    `}
-                    style={{ fontSize: `${Math.max(0.7, item.volume / 60)}rem`, borderColor: 'inherit' }}
-                  >
-                    {item.topic}
-                  </button>
-                );
-              })}
+              {narratives.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setSelectedNarrative(item.id === selectedNarrative ? null : item.id)}
+                  className={`
+                    px-3 py-2 rounded-full text-xs font-bold transition-all duration-300 border
+                    ${item.sentiment === 'danger' ? 'bg-red-500/10 border-red-500/30 text-red-400' : ''}
+                    ${item.sentiment === 'success' ? 'bg-green-500/10 border-green-500/30 text-green-400' : ''}
+                    ${item.sentiment === 'info' ? 'bg-blue-500/10 border-blue-500/30 text-blue-400' : ''}
+                    ${selectedNarrative === item.id ? 'ring-2 ring-offset-2 ring-offset-background' : ''}
+                  `}
+                >
+                  {item.topic}
+                </button>
+              ))}
             </div>
             
             <div className="mt-8 p-3 rounded-lg border border-yellow-500/20 bg-yellow-500/5">
-              <h4 className="text-xs font-bold mb-2 flex items-center gap-2" style={{ color: COLORS.warning }}>
+              <h4 className="text-xs font-bold mb-2 flex items-center gap-2 text-yellow-500">
                 <Zap className="w-3 h-3" /> Insight da IA
               </h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
@@ -233,6 +221,7 @@ export default function RadarPage() {
           </div>
         </div>
 
+        {/* Feed de Combate */}
         <div className="lg:col-span-5 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold text-muted-foreground uppercase">Feed de Combate</h3>
@@ -241,27 +230,15 @@ export default function RadarPage() {
           
           <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
             {feedAlerts.map((alert) => (
-              <div key={alert.id} className="glass-card p-4 rounded-xl border-border/50 hover:border-primary/30 transition-all group">
+              <div key={alert.id} className="glass-card p-4 rounded-xl border-border/50 hover:border-primary/30 transition-all">
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex items-center gap-2">
                     <Badge variant="secondary" className="text-[10px] h-5">{alert.network}</Badge>
                     <span className="text-xs text-muted-foreground font-mono">{alert.time}</span>
                   </div>
-                  {alert.risk === 'danger' && (
-                    <Badge className="text-[10px] gap-1 text-white border-none" style={{ backgroundColor: COLORS.danger }}>
-                      <AlertTriangle className="w-3 h-3" /> CRISE
-                    </Badge>
-                  )}
-                  {alert.risk === 'warning' && (
-                    <Badge className="text-[10px] gap-1 text-black border-none" style={{ backgroundColor: COLORS.warning }}>
-                      <Info className="w-3 h-3" /> ATENÇÃO
-                    </Badge>
-                  )}
-                   {alert.risk === 'success' && (
-                    <Badge className="text-[10px] gap-1 text-white border-none" style={{ backgroundColor: COLORS.success }}>
-                      <CheckCircle2 className="w-3 h-3" /> POSITIVO
-                    </Badge>
-                  )}
+                  {alert.risk === 'danger' && <Badge className="bg-red-500 text-[10px]">CRISE</Badge>}
+                  {alert.risk === 'warning' && <Badge className="bg-yellow-500 text-[10px] text-black">ATENÇÃO</Badge>}
+                  {alert.risk === 'success' && <Badge className="bg-green-500 text-[10px]">POSITIVO</Badge>}
                 </div>
                 
                 <h4 className="font-bold text-foreground text-sm mb-1">{alert.user}</h4>
@@ -269,38 +246,17 @@ export default function RadarPage() {
                   {alert.summary}
                 </p>
 
-                {alert.risk === 'danger' && (
-                  <div className="mb-3 p-2 rounded flex items-start gap-2 border border-yellow-500/20 bg-yellow-500/5">
-                    <Zap className="w-4 h-4 shrink-0 mt-0.5" style={{ color: COLORS.warning }} />
-                    <p className="text-xs font-medium" style={{ color: COLORS.warning }}>
-                      Atenção: Este tema apareceu em {alert.relatedWa} áudios no WhatsApp.
-                    </p>
-                  </div>
-                )}
-
                 <div className="flex gap-2">
-                  {alert.risk === 'success' ? (
-                     <Button 
-                     size="sm" 
-                     className="w-full text-white gap-2 border-none hover:opacity-90"
-                     style={{ backgroundColor: COLORS.success }}
-                   >
-                     <Share2 className="w-4 h-4" /> Impulsionar Conquista
-                   </Button>
-                  ) : (
-                    <Button 
-                      size="sm" 
-                      className="w-full text-white gap-2 border-none hover:opacity-90"
-                      style={{ backgroundColor: alert.risk === 'danger' ? COLORS.danger : COLORS.info }}
-                      onClick={() => handleCreateMission(alert)}
-                    >
-                      <ShieldAlert className="w-4 h-4" /> 
-                      {alert.risk === 'danger' ? 'Disparar Contra-Ataque' : 'Gerar Resposta'}
-                    </Button>
-                  )}
-                  
-                  <Button size="sm" variant="outline" className="w-10 px-0">
-                    <Maximize2 className="w-4 h-4" />
+                  <Button 
+                    size="sm" 
+                    className={`w-full text-white gap-2 border-none ${
+                      alert.risk === 'danger' ? 'bg-red-600 hover:bg-red-700' : 
+                      alert.risk === 'success' ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'
+                    }`}
+                    onClick={() => handleCreateMission(alert)}
+                  >
+                    {alert.risk === 'danger' ? <ShieldAlert className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                    {alert.risk === 'danger' ? 'Disparar Contra-Ataque' : 'Gerar Resposta'}
                   </Button>
                 </div>
               </div>
@@ -308,134 +264,139 @@ export default function RadarPage() {
           </div>
         </div>
 
-        {/* MAPA TÁTICO SERGIPE - V2 COM SVG DO ESTADO */}
+        {/* MAPA TÁTICO SERGIPE - "MAPBOX STYLE" */}
         <div className="lg:col-span-4 flex flex-col h-full">
-          <div className="glass-card rounded-xl border-border/50 flex-1 overflow-hidden relative flex flex-col bg-[#0f172a]">
-            <div className="p-4 border-b border-border/50 bg-secondary/20 z-10">
-              <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                <MapPin className="w-4 h-4" style={{ color: COLORS.info }} /> 
-                Inteligência Territorial (SE)
-              </h3>
-              <p className="text-xs text-muted-foreground">Cruzamento: Redes (Azul) vs. Zap (Amarelo)</p>
+          <div className="glass-card rounded-xl border-border/50 flex-1 overflow-hidden relative flex flex-col bg-[#111111]"> {/* Fundo Mapbox Dark */}
+            
+            {/* Cabeçalho do Mapa */}
+            <div className="p-4 border-b border-white/10 bg-[#1e1e1e] z-10 flex justify-between items-center">
+              <div>
+                <h3 className="text-sm font-bold text-gray-200 flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-blue-500" /> 
+                  Inteligência Territorial (SE)
+                </h3>
+                <p className="text-[10px] text-gray-500">Monitoramento em Tempo Real</p>
+              </div>
+              <div className="flex gap-1">
+                <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-[10px] text-red-500 font-bold">LIVE</span>
+              </div>
             </div>
 
-            {/* MAP CONTAINER */}
-            <div className="flex-1 relative w-full h-full flex items-center justify-center p-6">
-              {/* Background Grid */}
+            {/* CONTAINER DO MAPA */}
+            <div className="flex-1 relative w-full h-full p-6 flex items-center justify-center overflow-hidden">
+              
+              {/* 1. Grid de Fundo (Textura Mapbox) */}
               <div className="absolute inset-0 opacity-10" 
-                style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '20px 20px' }} 
+                style={{ 
+                  backgroundImage: 'linear-gradient(#333 1px, transparent 1px), linear-gradient(90deg, #333 1px, transparent 1px)', 
+                  backgroundSize: '40px 40px' 
+                }} 
               />
               
-              {/* SVG DO ESTADO DE SERGIPE (SIMULADO) */}
-              <div className="relative w-full max-w-[300px] aspect-[3/4]">
-                {/* Contorno do Mapa */}
-                <svg viewBox="0 0 100 130" className="w-full h-full drop-shadow-[0_0_15px_rgba(0,0,0,0.5)]">
-                  {/* Shape de Sergipe (Aproximado) */}
+              {/* 2. SVG DE SERGIPE (Geometria Real) */}
+              <div className="relative w-full max-w-[320px] aspect-[4/5]">
+                <svg viewBox="0 0 400 500" className="w-full h-full drop-shadow-2xl">
+                  <defs>
+                    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="15" result="blur" />
+                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                    </filter>
+                  </defs>
+                  
+                  {/* Contorno Brilhante (Glow) */}
                   <path 
-                    d="M 20 10 L 60 5 L 80 20 L 90 60 L 70 110 L 30 120 L 10 80 L 20 10 Z" 
-                    fill="#1e293b" 
-                    stroke="#475569" 
-                    strokeWidth="1"
-                    className="opacity-80"
+                    d="M 120,20 C 160,5 220,10 260,30 L 320,60 L 380,120 L 360,200 L 290,450 L 150,480 L 80,450 L 40,300 L 20,150 Z" 
+                    fill="none" 
+                    stroke="#3b82f6" 
+                    strokeWidth="15" 
+                    strokeOpacity="0.1"
+                    filter="url(#glow)"
                   />
-                  {/* Rios ou Divisas internas (Opcional, decorativo) */}
-                  <path d="M 60 5 L 65 30 L 90 60" fill="none" stroke="#334155" strokeWidth="0.5" />
+
+                  {/* O ESTADO (Shape Dark) */}
+                  <path 
+                    d="M 120,20 C 160,5 220,10 260,30 L 320,60 L 380,120 L 360,200 L 290,450 L 150,480 L 80,450 L 40,300 L 20,150 Z" 
+                    fill="#1e1e1e" 
+                    stroke="#444" 
+                    strokeWidth="2"
+                    className="transition-all duration-1000"
+                  />
+                  
+                  {/* Rios / Estradas (Fake Lines para textura) */}
+                  <path d="M 260,30 Q 250,150 290,450" fill="none" stroke="#333" strokeWidth="1" />
+                  <path d="M 120,20 Q 200,100 360,200" fill="none" stroke="#333" strokeWidth="1" />
+                  <path d="M 40,300 L 360,200" fill="none" stroke="#333" strokeWidth="1" />
+
                 </svg>
 
-                {/* --- PONTOS NO MAPA (Posicionados sobre o SVG) --- */}
+                {/* --- PINS ESTRATÉGICOS (Posicionamento CSS sobre o SVG) --- */}
 
-                {/* 1. Propriá (Norte/Rio) */}
-                <div className="absolute top-[5%] right-[30%] group">
-                  <div className="w-2 h-2 rounded-full animate-pulse bg-yellow-500 shadow-[0_0_8px_#EAB308]" />
-                  <span className="text-[9px] text-white/60 absolute top-3 -left-2">Propriá</span>
+                {/* PROPRIÁ (Norte) */}
+                <div className="absolute top-[5%] left-[45%] group cursor-pointer z-20">
+                  <div className="flex flex-col items-center">
+                    <MapPin className="w-4 h-4 text-gray-500 group-hover:text-white transition-colors" />
+                    <span className="text-[9px] text-gray-500 font-mono mt-1 group-hover:text-white">PROPRIÁ</span>
+                  </div>
                 </div>
 
-                {/* 2. Itabaiana (Agreste) */}
-                <div className="absolute top-[45%] left-[30%] group">
-                  <div className="w-3 h-3 rounded-full bg-yellow-500 border-2 border-black/50 shadow-[0_0_10px_#EAB308] animate-ping absolute opacity-30" />
-                  <div className="w-2 h-2 rounded-full bg-yellow-500 relative z-10" />
-                  <span className="text-[9px] text-white/80 font-bold absolute top-3 -left-4 bg-black/40 px-1 rounded">Itabaiana</span>
+                {/* ITABAIANA (Centro) */}
+                <div className="absolute top-[45%] left-[35%] group cursor-pointer z-20">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-yellow-500 rounded-full animate-ping opacity-50"></div>
+                    <div className="w-2 h-2 bg-yellow-500 rounded-full border border-black relative z-10"></div>
+                  </div>
+                  <div className="absolute left-4 top-0 bg-black/80 px-2 py-1 rounded border border-yellow-500/30">
+                    <span className="text-[10px] text-yellow-500 font-bold whitespace-nowrap">Itabaiana (Alertas)</span>
+                  </div>
                 </div>
 
-                {/* 3. ARACAJU (Leste/Costa) - MANCHA AZUL */}
-                <div className="absolute top-[55%] right-[5%] group">
-                   {/* Aura de calor */}
-                   <div className="w-12 h-12 -top-4 -left-4 rounded-full bg-blue-500/20 blur-xl absolute animate-pulse" />
-                   <div className="w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-[0_0_15px_#3B82F6]" />
-                   <span className="text-[10px] text-white font-bold absolute top-4 -left-3 drop-shadow-md">ARACAJU</span>
+                {/* ARACAJU (Leste) - O Foco Azul */}
+                <div className="absolute top-[50%] right-[15%] group cursor-pointer z-30">
+                  <div className="relative flex items-center justify-center">
+                     <div className="absolute inset-0 w-16 h-16 bg-blue-500/10 rounded-full blur-xl"></div>
+                     <div className="w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-[0_0_20px_#3b82f6]"></div>
+                     <span className="absolute left-5 text-xs font-black text-white tracking-widest drop-shadow-md">ARACAJU</span>
+                  </div>
                 </div>
 
-                {/* 4. Lagarto (Centro-Sul) */}
-                <div className="absolute bottom-[20%] left-[35%] group">
-                  <div className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                  <span className="text-[9px] text-white/50 absolute top-2 -left-2">Lagarto</span>
+                {/* LAGARTO (Sul) */}
+                <div className="absolute bottom-[15%] left-[40%] group cursor-pointer z-20">
+                  <div className="w-1.5 h-1.5 bg-gray-600 rounded-full group-hover:bg-white transition-colors" />
+                  <span className="text-[9px] text-gray-600 absolute left-3 -top-1 group-hover:text-white">Lagarto</span>
                 </div>
 
               </div>
             </div>
 
-            {/* LEGENDA */}
-            <div className="absolute bottom-4 left-4 right-4 bg-black/60 backdrop-blur-sm p-2 rounded border border-white/5 flex justify-between px-4">
-               <div className="flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_5px_#3B82F6]" />
-                 <span className="text-[10px] text-gray-300">Capital (Redes)</span>
-               </div>
-               <div className="flex items-center gap-2">
-                 <div className="w-2 h-2 rounded-full bg-yellow-500 shadow-[0_0_5px_#EAB308]" />
-                 <span className="text-[10px] text-gray-300">Interior (Zap)</span>
-               </div>
+            {/* Rodapé do Mapa */}
+            <div className="absolute bottom-4 right-4 bg-black/80 px-3 py-1 rounded text-[9px] text-gray-500 font-mono border border-white/5">
+              GovMesh GeoIntel v2.4
             </div>
 
           </div>
         </div>
-
       </div>
 
       <Dialog open={isCounterAttackOpen} onOpenChange={setIsCounterAttackOpen}>
         <DialogContent className="bg-card border-border max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2" style={{ color: COLORS.danger }}>
+            <DialogTitle className="flex items-center gap-2 text-red-500">
               <ShieldAlert className="w-5 h-5" /> WAR ROOM: Iniciar Defesa
             </DialogTitle>
             <DialogDescription>
               Você está prestes a mobilizar a base para neutralizar um ataque.
             </DialogDescription>
           </DialogHeader>
-
-          {activeAlert && (
-            <div className="bg-secondary/30 p-4 rounded-lg border border-border/50 my-2">
-              <p className="text-xs font-bold text-muted-foreground uppercase mb-1">Alvo do Combate</p>
-              <p className="text-sm font-medium text-foreground">{activeAlert.summary}</p>
-              <div className="mt-3 flex gap-2">
-                <Badge variant="outline" className="text-yellow-500 border-yellow-500/30 bg-yellow-500/5">
-                  {activeAlert.relatedWa} Líderes Afetados (Interior)
-                </Badge>
-                <Badge variant="outline" className="text-red-500 border-red-500/30 bg-red-500/5">
-                  Prioridade Máxima
-                </Badge>
-              </div>
-            </div>
-          )}
-
           <div className="space-y-3">
-            <label className="text-sm font-medium text-foreground">Ação Recomendada:</label>
-            <div className="p-3 rounded-lg border border-primary/50 bg-primary/5 cursor-pointer hover:bg-primary/10 transition-colors flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-primary/20 rounded-lg text-primary">
-                  <Share2 className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">Disparar Kit "A Verdade"</p>
-                  <p className="text-xs text-muted-foreground">Vídeo + Texto para Grupos de WhatsApp</p>
-                </div>
-              </div>
-              <ArrowRight className="w-4 h-4 text-primary" />
-            </div>
+             <div className="p-4 bg-secondary/30 rounded border border-border">
+                <p className="text-sm font-bold">Ação: Disparo em Massa (WhatsApp)</p>
+                <p className="text-xs text-muted-foreground">Alvo: Lideranças do Agreste e Grande Aracaju</p>
+             </div>
           </div>
-
           <DialogFooter>
             <Button variant="ghost" onClick={() => setIsCounterAttackOpen(false)}>Cancelar</Button>
-            <Button className="text-white border-none hover:bg-red-700" style={{ backgroundColor: COLORS.danger }} onClick={confirmMission}>
+            <Button className="bg-red-600 hover:bg-red-700 text-white" onClick={confirmMission}>
               Confirmar e Disparar
             </Button>
           </DialogFooter>
